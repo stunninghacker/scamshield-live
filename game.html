@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spot the Scam — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="7">
+  <header id="topbar"></header>
+
+  <main class="page" id="game">
+    <div class="game-hud">
+      <div class="hud-item" id="hud-round">Round 1 / 8</div>
+      <button class="timer" id="timer" type="button" aria-label="Time left">
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <circle class="ring-bg" cx="28" cy="28" r="24" fill="none" stroke-width="5"></circle>
+          <circle class="ring-fg" id="ring" cx="28" cy="28" r="24" fill="none" stroke-width="5"
+                  stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="0"></circle>
+        </svg>
+        <span class="timer-num" id="timer-num">15</span>
+      </button>
+      <div class="hud-item" id="hud-score">Score 0</div>
+    </div>
+
+    <p class="center muted small" id="prompt">Scam or legit? Decide before the timer runs out.</p>
+
+    <!-- The fake message is drawn here by js/game.js -->
+    <div id="stage"></div>
+
+    <div class="answer-row" id="answers">
+      <button class="btn btn-scam" id="btn-scam" type="button">🚨 SCAM</button>
+      <button class="btn btn-legit" id="btn-legit" type="button">✅ LEGIT</button>
+    </div>
+
+    <div id="feedback" aria-live="assertive"></div>
+
+    <div class="round-dots" id="dots" aria-hidden="true"></div>
+
+    <div id="skip-box" class="hidden center" style="margin-top:12px">
+      <a class="link-arrow" href="story.html">Skip to story →</a>
+    </div>
+  </main>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>

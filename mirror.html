@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Footprint Mirror — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="2">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <p class="eyebrow">Footprint Mirror</p>
+    <h1>Here's what I already know about you</h1>
+    <p class="muted">You haven't clicked "Allow" on anything yet.</p>
+
+    <div id="mirror-list" class="mirror-list" aria-live="polite"></div>
+
+    <div id="mirror-end" class="stack hidden">
+      <div class="callout callout-danger fade-up" style="margin-top:20px">
+        <strong>You didn't share any of this. Your browser did.</strong>
+        <p>Every website you open can read these details the moment it loads.</p>
+      </div>
+      <p class="small muted center">🔒 Shown only to you. Nothing saved.</p>
+      <a class="btn btn-primary btn-block btn-lg" href="confidence.html">Next →</a>
+    </div>
+  </main>
+
+  <script type="module" src="js/mirror.js"></script>
+</body>
+</html>

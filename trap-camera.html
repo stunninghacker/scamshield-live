@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verification — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="4" data-trap="camera">
+  <header id="topbar"></header>
+
+  <main class="page stack">
+    <!-- The "random website" the trap pretends to be -->
+    <section id="bait" class="fake-site">
+      <span class="fake-url">secure-verify-check.net</span>
+      <div class="big-icon" aria-hidden="true">🤖</div>
+      <h2>Verify you're human</h2>
+      <p>Allow camera access to continue.</p>
+      <button id="bait-btn" class="fake-btn" type="button">Continue</button>
+    </section>
+
+    <!-- Shown only if camera is allowed (live preview, 3 seconds) -->
+    <section id="cam" class="cam-frame hidden" aria-live="assertive">
+      <video id="cam-video" muted playsinline autoplay></video>
+      <span id="cam-count" class="cam-countdown">3</span>
+      <div class="cam-overlay">🚨 This website can now SEE you.</div>
+    </section>
+
+    <!-- Result + reveal, filled in by js/traps.js -->
+    <div id="result" aria-live="polite"></div>
+
+    <div id="next" class="hidden">
+      <a class="btn btn-primary btn-block btn-lg" href="trap-location.html">Next →</a>
+    </div>
+  </main>
+
+  <script type="module" src="js/traps.js"></script>
+</body>
+</html>

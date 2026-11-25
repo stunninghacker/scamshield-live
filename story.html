@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Incoming video call — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="8">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <p class="eyebrow">Final challenge · Digital Arrest</p>
+    <p class="muted small">Your phone rings. A video call from an unknown number…</p>
+
+    <section aria-label="Video call chat">
+      <div class="call-header">
+        <div class="avatar" aria-hidden="true">👮</div>
+        <div>
+          <div class="who">CBI Officer R. Sharma</div>
+          <div class="sub">📹 Video call · <span id="call-time">00:00</span></div>
+        </div>
+        <span class="rec">● REC</span>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+    </section>
+
+    <div class="choices" id="choices"></div>
+
+    <div id="ending"></div>
+  </main>
+
+  <script type="module" src="js/story.js"></script>
+</body>
+</html>

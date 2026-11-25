@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// ScamShield Live — Firestore security rules
+// Anyone may READ (the data is anonymous). Only a signed-in (anonymous)
+// visitor may CREATE one result, and only with exactly the allowed
+// fields, types and ranges. Nobody may UPDATE or DELETE.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /results/{sessionId} {
+      allow read: if true;
+      allow create: if request.auth != null && isValidResult(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    // Everything else is locked.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isTrapChoice(value) {
+      return value in ['allow', 'block', 'unsupported'];
+    }
+
+    function isValidResult(d) {
+      return d.keys().hasOnly(['v', 'confidence', 'correct', 'awareness', 'rounds', 'traps', 'escaped', 'createdAt'])
+        && d.keys().hasAll(['v', 'confidence', 'correct', 'awareness', 'rounds', 'traps', 'escaped', 'createdAt'])
+        && d.v == 1
+        && d.confidence is int && d.confidence >= 1 && d.confidence <= 5
+        && d.correct is int && d.correct >= 0 && d.correct <= 8
+        && d.awareness is int && d.awareness >= 0 && d.awareness <= 100
+        && d.rounds is list && d.rounds.size() == 8
+        && d.rounds[0] is bool && d.rounds[1] is bool && d.rounds[2] is bool && d.rounds[3] is bool
+        && d.rounds[4] is bool && d.rounds[5] is bool && d.rounds[6] is bool && d.rounds[7] is bool
+        && d.traps is map
+        && d.traps.keys().hasOnly(['camera', 'location', 'notify'])
+        && d.traps.keys().hasAll(['camera', 'location', 'notify'])
+        && isTrapChoice(d.traps.camera)
+        && isTrapChoice(d.traps.location)
+        && d.traps.notify in ['allow', 'block']
+        && d.escaped is bool
+        && d.createdAt == request.time;
+    }
+  }
+}

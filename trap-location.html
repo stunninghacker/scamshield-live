@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parcel pickup — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet: free map library, used only to draw the map on YOUR screen -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="5" data-trap="location">
+  <header id="topbar"></header>
+
+  <main class="page stack">
+    <section id="bait" class="fake-site">
+      <span class="fake-url">parcel-pickup-points.co</span>
+      <div class="big-icon" aria-hidden="true">📦</div>
+      <h2>Your parcel is waiting!</h2>
+      <p>Allow location to find the nearest pickup point.</p>
+      <button id="bait-btn" class="fake-btn orange" type="button">Find my parcel</button>
+    </section>
+
+    <section id="map-wrap" class="hidden stack">
+      <div class="callout callout-danger"><strong>🚨 A scammer now knows where you are.</strong></div>
+      <div id="map" class="map" role="img" aria-label="Map showing your current position"></div>
+    </section>
+
+    <div id="result" aria-live="polite"></div>
+
+    <div id="next" class="hidden">
+      <a class="btn btn-primary btn-block btn-lg" href="trap-notify.html">Next →</a>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="js/traps.js"></script>
+</body>
+</html>

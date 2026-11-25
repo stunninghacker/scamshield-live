@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confidence Check — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="3">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <p class="eyebrow">Confidence Check</p>
+    <h1>How good are you at spotting scams?</h1>
+    <p class="muted">Be honest. Tap the stars.</p>
+
+    <div class="stars" id="stars" role="radiogroup" aria-label="Your confidence, 1 to 5 stars"></div>
+    <p class="star-caption" id="star-caption" aria-live="polite"></p>
+  </main>
+
+  <script type="module">
+    import { initPage, el, goTo } from './js/ui.js';
+    import { updateState } from './js/session.js';
+
+    initPage();
+
+    const captions = ['', 'Not good at all', 'A little', 'Okay', 'Pretty good', 'Nobody can fool me 😎'];
+    const starsBox = document.getElementById('stars');
+    const caption = document.getElementById('star-caption');
+    const buttons = [];
+    let chosen = false;
+
+    // Light up stars 1..n
+    function light(n) {
+      buttons.forEach((b, i) => b.classList.toggle('on', i < n));
+      caption.textContent = captions[n] || '';
+    }
+
+    for (let n = 1; n <= 5; n++) {
+      const star = el('button', {
+        className: 'star',
+        type: 'button',
+        role: 'radio',
+        ariaChecked: 'false',
+        ariaLabel: n + (n === 1 ? ' star' : ' stars') + ': ' + captions[n],
+      }, '★');
+      star.addEventListener('mouseenter', () => { if (!chosen) light(n); });
+      star.addEventListener('click', () => choose(n));
+      buttons.push(star);
+      starsBox.appendChild(star);
+    }
+    starsBox.addEventListener('mouseleave', () => { if (!chosen) light(0); });
+
+    // Save the answer, then move on after 600 ms.
+    function choose(n) {
+      if (chosen) return;
+      chosen = true;
+      light(n);
+      buttons[n - 1].setAttribute('aria-checked', 'true');
+      updateState((s) => { s.confidence = n; });
+      setTimeout(() => goTo('trap-camera.html'), 600);
+    }
+  </script>
+</body>
+</html>

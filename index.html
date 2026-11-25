@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScamShield Live — Think you can't be scammed?</title>
+  <meta name="description" content="A 3-minute challenge that shows how easily people get fooled online — and a free tool to check any suspicious message.">
+  <meta name="theme-color" content="#0b0f17">
+  <meta property="og:title" content="ScamShield Live 🛡️">
+  <meta property="og:description" content="Think you can't be scammed? Let's find out. 3-minute challenge.">
+  <meta property="og:image" content="assets/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="1">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <section class="hero fade-up">
+      <p class="eyebrow">Cyber awareness challenge · 3 min</p>
+      <h1>ScamShield Live 🛡️</h1>
+      <p class="tagline">Think you can't be scammed? Let's find out.</p>
+    </section>
+
+    <div class="hero-terminal" aria-hidden="true">
+      <span class="line">&gt; scanning visitor…</span>
+      <span class="line">&gt; confidence: <span class="ok">HIGH</span></span>
+      <span class="line">&gt; actually safe: <span class="hl">???</span><span class="cursor"></span></span>
+    </div>
+
+    <button id="start-btn" class="btn btn-primary btn-lg btn-block" type="button">▶ Start</button>
+
+    <div class="home-links">
+      <a class="link-arrow" href="check.html">Just check a message →</a>
+      <a class="link-arrow" href="report.html">See batch report →</a>
+    </div>
+
+    <ol class="journey" aria-label="What happens">
+      <li><span class="num">01</span> See what your browser leaks about you</li>
+      <li><span class="num">02</span> Survive three permission traps</li>
+      <li><span class="num">03</span> Spot the scam — 8 real-style messages</li>
+      <li><span class="num">04</span> Get a call from a "CBI officer"</li>
+      <li><span class="num">05</span> Compare yourself with the whole batch</li>
+    </ol>
+
+    <footer class="footer">
+      <p>No login · No photos, location or personal info is stored.</p>
+      <p>Built with HTML, CSS &amp; JavaScript</p>
+    </footer>
+  </main>
+
+  <script type="module">
+    import { initPage, startFresh } from './js/ui.js';
+    initPage();
+    // Start = a fresh run (new anonymous ID), keeping demo mode if on.
+    document.getElementById('start-btn').addEventListener('click', startFresh);
+  </script>
+</body>
+</html>

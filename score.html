@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Score Card — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="9">
+  <header id="topbar"></header>
+
+  <main class="page stack" id="score-page">
+    <div>
+      <p class="eyebrow">Your Score Card</p>
+      <div class="big-score" aria-live="polite"><span id="correct">0</span><span class="of"> / 8</span></div>
+      <p class="center muted" id="score-sub">messages judged correctly</p>
+    </div>
+
+    <div class="badge" id="badge">
+      <div class="badge-icon" id="badge-icon" aria-hidden="true"></div>
+      <div class="badge-name" id="badge-name"></div>
+      <div class="awareness">Awareness score: <span id="awareness">0</span> / 100</div>
+    </div>
+
+    <div class="card" id="confidence-card"></div>
+
+    <div class="card">
+      <h3>Your results</h3>
+      <ul class="result-list" id="result-list"></ul>
+    </div>
+
+    <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per trap blocked (max 30) + 10 if you escaped the story</p>
+
+    <button class="btn btn-block" id="share-btn" type="button">📤 Share my score</button>
+    <a class="btn btn-primary btn-block btn-lg" href="report.html">See batch report →</a>
+  </main>
+
+  <script type="module" src="js/score.js"></script>
+</body>
+</html>

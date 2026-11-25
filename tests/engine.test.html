@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Engine tests — ScamShield Live</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .page { max-width: 1000px; }
+    .summary { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 800; }
+    .summary.ok { color: var(--safe); }
+    .summary.bad { color: var(--danger); }
+    details { margin-top: 18px; }
+    summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>🧪 ScamShield engine tests</h1>
+    <p class="muted">Every case from <code>rules_test.dart</code>, <code>eval_harness_test.dart</code> and
+      <code>heldout_eval_test.dart</code>, plus the 4 demo samples and the 8 game rounds.
+      Expected labels come from the Dart files and are never edited to make a test pass.</p>
+    <p id="summary" class="summary">Running…</p>
+    <div id="groups"></div>
+  </main>
+
+  <script type="module">
+    import {
+      analyze, detectLinks, detectSecretRequest, detectUrgency, detectReward,
+      detectPaymentPull, detectCallback, detectImpersonation, WEIGHTS, THRESHOLDS, DEMO_SAMPLES,
+    } from '../js/engine.js';
+    import { EVAL_CASES, HELDOUT_CASES } from './cases.js';
+    import { ROUNDS } from '../js/rounds.js';
+
+    // ---- tiny test runner ----
+    const groups = []; // { name, rows: [{ name, pass, detail }] }
+    function group(name) { const g = { name, rows: [] }; groups.push(g); return g; }
+    function check(g, name, pass, detail) { g.rows.push({ name, pass: Boolean(pass), detail: detail || '' }); }
+    const ids = (r) => r.signals.map((s) => s.id);
+
+    // ================================================================
+    // 1. rules_test.dart (unit tests of each detector)
+    // ================================================================
+    const u = group('rules_test.dart — detector unit tests');
+    const genuine = DEMO_SAMPLES[3].text;
+
+    {
+      const t = 'visit https://delivery-update.com/track?id=1 now';
+      const m = detectLinks(t);
+      check(u, 'LINK: detects plain https URL', m.length > 0 && m[0].id === 'LINK_RISK' && t.substring(m[0].start, m[0].end) === m[0].matchedText);
+    }
+    {
+      const plain = detectLinks('see https://example.com/x')[0].weight;
+      const short = detectLinks('see http://bit.ly/kbc-win2024')[0].weight;
+      check(u, 'LINK: boosts shortener', short > plain && short >= WEIGHTS.linkBase + WEIGHTS.linkShortener, plain + ' vs ' + short);
+    }
+    {
+      const m = detectLinks('go http://sbi-verify.xyz/kyc-update')[0];
+      check(u, 'LINK: boosts http + lookalike bank domain', m.detail.includes('lookalike') && m.detail.includes('no-https') && m.weight >= WEIGHTS.linkBase + WEIGHTS.linkLookalike, m.detail);
+    }
+    check(u, 'LINK: flags IP host URLs', detectLinks('open http://192.168.1.10/login')[0].detail.includes('ip-host'));
+    check(u, 'LINK: no false positive on genuine alert', detectLinks(genuine).length === 0);
+
+    check(u, 'SECRET: OTP', detectSecretRequest('share your OTP now').length > 0);
+    check(u, 'SECRET: enter your UPI PIN', detectSecretRequest('enter your UPI PIN').length > 0);
+    check(u, 'SECRET: enter ATM PIN', detectSecretRequest('enter ATM PIN').length > 0);
+    check(u, 'SECRET: share CVV number', detectSecretRequest('share CVV number').length > 0);
+    check(u, 'SECRET: enter your password', detectSecretRequest('enter your password').length > 0);
+    {
+      const t = 'Please share your OTP now to verify';
+      const m = detectSecretRequest(t)[0];
+      check(u, 'SECRET: exact offsets', t.substring(m.start, m.end).toLowerCase().includes('otp') && m.matchedText === t.substring(m.start, m.end));
+    }
+    check(u, 'SECRET: safety advice is not a request', detectSecretRequest('Never share your OTP with anyone. Bank staff will never ask for it.').length === 0);
+    check(u, 'SECRET: "Do not enter your PIN here." is advice', detectSecretRequest('Do not enter your PIN here.').length === 0);
+    check(u, 'SECRET: "Share your OTP. Never ignore this!" still fires', detectSecretRequest('Share your OTP. Never ignore this!').length > 0);
+    check(u, 'SECRET: genuine alert has none', detectSecretRequest(genuine).length === 0);
+
+    check(u, 'URGENCY: account will be BLOCKED', detectUrgency('account will be BLOCKED').length > 0);
+    check(u, 'URGENCY: within 24 hours', detectUrgency('within 24 hours').length > 0);
+    check(u, 'URGENCY: verify immediately', detectUrgency('verify immediately').length > 0);
+    check(u, 'URGENCY: last warning, legal action', detectUrgency('last warning, legal action').length > 0);
+    check(u, 'URGENCY: genuine alert has none', detectUrgency(genuine).length === 0);
+
+    for (const t of ['You won lottery Rs 10 lakh', 'claim your prize now', 'cashback of Rs 500', 'You won KBC lottery', 'refund pending, claim now']) {
+      check(u, 'REWARD: ' + t, detectReward(t).length > 0);
+    }
+
+    {
+      const m = detectPaymentPull('pay to winner-claim@okhdfcbank now');
+      check(u, 'PAYMENT: UPI handle', m.length > 0 && m[0].matchedText.includes('@okhdfcbank'));
+    }
+    check(u, 'PAYMENT: scan this QR to pay', detectPaymentPull('scan this QR to pay').length > 0);
+    check(u, 'PAYMENT: pay Rs.499 processing fee', detectPaymentPull('pay Rs.499 processing fee').length > 0);
+
+    check(u, 'CALLBACK: call 9876543210 now', detectCallback('call 9876543210 now').length > 0);
+    check(u, 'CALLBACK: Call 1800123456 for help', detectCallback('Call 1800123456 for help').length > 0);
+    check(u, 'CALLBACK: no call cue = no fire', detectCallback('my number is 9876543210').length === 0);
+    check(u, 'CALLBACK: amounts are not phones', detectCallback(genuine).length === 0);
+
+    {
+      const g = 'Rs.12,450 credited to your SBI A/c XX1234. -SBI';
+      check(u, 'IMPERSONATION: only with another signal', detectImpersonation(g, false).length === 0 && detectImpersonation(g, true).length > 0);
+      const courier = DEMO_SAMPLES[2].text;
+      check(u, 'IMPERSONATION: courier + link counts', detectImpersonation(courier, detectLinks(courier).length > 0).length > 0);
+    }
+
+    {
+      const r = analyze(DEMO_SAMPLES[0].text);
+      check(u, 'ENGINE: sample1 -> DANGEROUS with LINK/SECRET/URGENCY/IMPERSONATION',
+        r.verdict === 'DANGEROUS' && r.score >= THRESHOLDS.dangerous &&
+        ['LINK_RISK', 'SECRET_REQUEST', 'URGENCY_THREAT', 'IMPERSONATION'].every((id) => ids(r).includes(id)));
+    }
+    {
+      const r = analyze(DEMO_SAMPLES[1].text);
+      check(u, 'ENGINE: sample2 -> DANGEROUS with REWARD/PAYMENT/LINK',
+        r.verdict === 'DANGEROUS' && ['REWARD_LURE', 'PAYMENT_PULL', 'LINK_RISK'].every((id) => ids(r).includes(id)));
+    }
+    {
+      const r = analyze(DEMO_SAMPLES[2].text);
+      check(u, 'ENGINE: sample3 -> SUSPICIOUS (30..59)', r.verdict === 'SUSPICIOUS' && r.score >= 30 && r.score < 60, 'score ' + r.score);
+    }
+    {
+      const r = analyze(DEMO_SAMPLES[3].text);
+      check(u, 'ENGINE: sample4 -> SAFE, no signals, score 0', r.verdict === 'SAFE' && r.signals.length === 0 && r.score === 0);
+    }
+    {
+      const r = analyze('   ');
+      check(u, 'ENGINE: empty input -> SAFE 0', r.verdict === 'SAFE' && r.score === 0);
+    }
+    {
+      let ok = true;
+      for (const d of DEMO_SAMPLES) {
+        const r = analyze(d.text);
+        for (const s of r.signals) if (r.text.substring(s.start, s.end) !== s.matchedText) ok = false;
+      }
+      check(u, 'ENGINE: all spans exactly match source text', ok);
+    }
+
+    // ================================================================
+    // 2. Demo samples
+    // ================================================================
+    const d = group('demo_samples.dart — 4 demo samples');
+    for (const s of DEMO_SAMPLES) {
+      const r = analyze(s.text);
+      check(d, s.title + ' → expected ' + s.expected, r.verdict === s.expected, 'got ' + r.verdict + ' (' + r.score + ')');
+    }
+
+    // ================================================================
+    // 3. Big case lists (verdict must match the Dart label)
+    // ================================================================
+    function runCases(name, cases) {
+      const g = group(name);
+      for (const c of cases) {
+        const r = analyze(c.text);
+        const missing = c.signals.filter((id) => !ids(r).includes(id));
+        const spansOk = r.signals.every((s) => r.text.substring(s.start, s.end) === s.matchedText);
+        const pass = r.verdict === c.expected && spansOk;
+        const detail = 'expected ' + c.expected + ', got ' + r.verdict + ' (' + r.score + ')' +
+          (missing.length ? ' · missing signals: ' + missing.join(', ') : '') + ' — ' + c.text;
+        check(g, c.id, pass, detail);
+      }
+    }
+    runCases('eval_harness_test.dart — ' + EVAL_CASES.length + ' cases', EVAL_CASES);
+    runCases('heldout_eval_test.dart — ' + HELDOUT_CASES.length + ' held-out cases', HELDOUT_CASES);
+
+    // ================================================================
+    // 4. Game rounds: scams flagged, legit SAFE
+    // ================================================================
+    const gr = group('Game rounds (js/rounds.js)');
+    for (const round of ROUNDS) {
+      const r = analyze(round.text);
+      const pass = round.answer === 'scam' ? r.verdict !== 'SAFE' : r.verdict === 'SAFE';
+      check(gr, 'Round ' + round.id + ' (' + round.answer + ')', pass, 'engine: ' + r.verdict + ' (' + r.score + ')');
+    }
+
+    // ================================================================
+    // Draw the results
+    // ================================================================
+    let total = 0;
+    let passed = 0;
+    const container = document.getElementById('groups');
+    for (const g of groups) {
+      const gPassed = g.rows.filter((r) => r.pass).length;
+      total += g.rows.length;
+      passed += gPassed;
+
+      const details = document.createElement('details');
+      if (gPassed !== g.rows.length) details.open = true;
+      const summary = document.createElement('summary');
+      summary.textContent = (gPassed === g.rows.length ? '✅ ' : '❌ ') + g.name + ' — ' + gPassed + ' / ' + g.rows.length;
+      details.appendChild(summary);
+
+      const table = document.createElement('table');
+      table.className = 'test-table';
+      for (const row of g.rows) {
+        const tr = document.createElement('tr');
+        tr.className = row.pass ? 'pass' : 'fail';
+        for (const text of [row.pass ? 'PASS' : 'FAIL', row.name, row.detail]) {
+          const td = document.createElement('td');
+          td.textContent = text;
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+      details.appendChild(table);
+      container.appendChild(details);
+    }
+
+    const summaryEl = document.getElementById('summary');
+    summaryEl.textContent = (passed === total ? '✅ ' : '❌ ') + passed + ' / ' + total + ' passed';
+    summaryEl.className = 'summary ' + (passed === total ? 'ok' : 'bad');
+    window.TEST_RESULT = { passed, total };
+  </script>
+</body>
+</html>

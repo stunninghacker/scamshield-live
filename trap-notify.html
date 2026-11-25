@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You won! — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-step="6" data-trap="notify">
+  <header id="topbar"></header>
+
+  <main class="page stack">
+    <section id="bait" class="fake-site">
+      <span class="fake-url">lucky-winner-today.click</span>
+      <div class="big-icon" aria-hidden="true">🎉</div>
+      <h2>Congratulations! You've won an iPhone!</h2>
+      <p>Tap Allow to claim.</p>
+      <button id="bait-btn" class="fake-btn green" type="button">Claim Prize</button>
+    </section>
+
+    <div id="result" aria-live="polite"></div>
+
+    <div id="next" class="hidden">
+      <a class="btn btn-primary btn-block btn-lg" href="game.html">Start the Game →</a>
+    </div>
+  </main>
+
+  <!-- Fake permission box. This is plain HTML, NOT the real browser
+       prompt. We never ask for real notification permission. -->
+  <div id="perm" class="perm-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="perm-title">
+    <div class="perm-box">
+      <div class="perm-site">lucky-winner-today.click</div>
+      <div class="perm-title" id="perm-title"><span aria-hidden="true">🔔</span> <span>This site wants to <b>show notifications</b></span></div>
+      <div class="perm-actions">
+        <button id="perm-block" type="button">Block</button>
+        <button id="perm-allow" class="perm-allow" type="button">Allow</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notif-stack" class="notif-stack" aria-live="polite"></div>
+
+  <script type="module" src="js/traps.js"></script>
+</body>
+</html>
