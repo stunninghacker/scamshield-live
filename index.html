@@ -3,54 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ScamShield Live — Think you can't be scammed?</title>
-  <meta name="description" content="A 3-minute challenge that shows how easily people get fooled online — and a free tool to check any suspicious message.">
-  <meta name="theme-color" content="#0b0f17">
-  <meta property="og:title" content="ScamShield Live 🛡️">
-  <meta property="og:description" content="Think you can't be scammed? Let's find out. 3-minute challenge.">
+  <title>ScamShield Live — Could you spot a scam?</title>
+  <meta name="description" content="A 3-minute test built from real scam patterns in India. Find out what you would fall for, then see how your batch did.">
+  <meta name="theme-color" content="#0b0d14">
+  <meta property="og:title" content="ScamShield Live">
+  <meta property="og:description" content="Most scams don't need hacking. They need one tap from you. 3-minute test.">
   <meta property="og:image" content="assets/og-image.png">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* numbered evidence tags on the home phone */
+    .tag-n {
+      display: inline-grid;
+      place-items: center;
+      width: 16px;
+      height: 16px;
+      margin-left: 2px;
+      border-radius: 50%;
+      background: var(--marker);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1;
+      vertical-align: 2px;
+    }
+    .evidence-notes {
+      list-style: none;
+      margin: 20px auto 0;
+      padding: 0;
+      max-width: 320px;
+      display: grid;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-2);
+    }
+    .evidence-notes li { display: grid; grid-template-columns: 24px 1fr; align-items: center; }
+  </style>
 </head>
 <body data-step="1">
   <header id="topbar"></header>
 
-  <main class="page">
-    <section class="hero fade-up">
-      <p class="eyebrow">Cyber awareness challenge · 3 min</p>
-      <h1>ScamShield Live 🛡️</h1>
-      <p class="tagline">Think you can't be scammed? Let's find out.</p>
+  <main class="page page-wide">
+    <section class="hero">
+      <div class="hero-copy rise">
+        <p class="meta">A cyber awareness test · about 3 minutes</p>
+        <h1>Most scams don't need hacking. They need one tap from you.</h1>
+        <p class="lead">A short test built from real scam patterns in India. Find out what you'd fall for, then see how your batch did.</p>
+        <div class="btn-row">
+          <button id="start-btn" class="btn btn-primary" type="button">Start the test <i data-icon="arrow-right"></i></button>
+          <a class="btn" href="check.html"><i data-icon="search"></i> Check a message</a>
+        </div>
+        <p class="hero-meta">No login · Nothing personal is stored</p>
+      </div>
+
+      <!-- The moment: a real-looking scam SMS, marked up like evidence -->
+      <figure class="evidence rise" style="margin:0" aria-label="Example scam SMS with its red flags marked">
+        <div class="phone" aria-hidden="true">
+          <div class="phone-screen">
+            <div class="phone-status"><span>9:41</span><span class="bars"><span>5G</span><i data-icon="battery-charging"></i></span></div>
+            <div class="app-head">
+              <div class="app-avatar">VK</div>
+              <div>
+                <div class="app-name">VK-SBIKYC</div>
+                <div class="app-sub">Text message</div>
+              </div>
+            </div>
+            <div class="app-body">
+              <div class="app-time">Today 9:38 am</div>
+              <div class="sms-bubble">Dear SBI customer, your account will be <span class="marker">BLOCKED today</span><span class="tag-n">1</span> due to incomplete KYC. Update KYC immediately at <span class="marker">http://sbi-kyc-update.xyz/verify</span><span class="tag-n">2</span> to avoid suspension.</div>
+            </div>
+          </div>
+        </div>
+        <ol class="evidence-notes">
+          <li><span class="tag-n">1</span>A deadline to make you panic</li>
+          <li><span class="tag-n">2</span>Not the bank's site: .xyz, no https</li>
+        </ol>
+      </figure>
     </section>
 
-    <div class="hero-terminal" aria-hidden="true">
-      <span class="line">&gt; scanning visitor…</span>
-      <span class="line">&gt; confidence: <span class="ok">HIGH</span></span>
-      <span class="line">&gt; actually safe: <span class="hl">???</span><span class="cursor"></span></span>
-    </div>
-
-    <button id="start-btn" class="btn btn-primary btn-lg btn-block" type="button">▶ Start</button>
-
-    <div class="home-links">
-      <a class="link-arrow" href="check.html">Just check a message →</a>
-      <a class="link-arrow" href="report.html">See batch report →</a>
-    </div>
-
-    <ol class="journey" aria-label="What happens">
-      <li><span class="num">01</span> See what your browser leaks about you</li>
-      <li><span class="num">02</span> Survive three permission traps</li>
-      <li><span class="num">03</span> Spot the scam — 8 real-style messages</li>
-      <li><span class="num">04</span> Get a call from a "CBI officer"</li>
-      <li><span class="num">05</span> Compare yourself with the whole batch</li>
-    </ol>
+    <section class="stack" style="margin-top:64px;max-width:600px">
+      <h2>What you'll go through</h2>
+      <ol class="journey">
+        <li><span class="n">01</span><span><b>Your footprint.</b> What this page learned about you before you tapped anything</span></li>
+        <li><span class="n">02</span><span><b>Player card.</b> A quick set-up, like any app asks for</span></li>
+        <li><span class="n">03</span><span><b>Spot the scam.</b> Eight real-style messages, 15 seconds each</span></li>
+        <li><span class="n">04</span><span><b>A call from the "CBI".</b> Three decisions, real money on the line</span></li>
+        <li><span class="n">05</span><span><b>Your batch.</b> How confident everyone felt, and how they really did</span></li>
+      </ol>
+    </section>
 
     <footer class="footer">
-      <p>No login · No photos, location or personal info is stored.</p>
-      <p>Built with HTML, CSS &amp; JavaScript</p>
+      <span>No login. No photos, location or personal details are stored.</span>
+      <span>Built with HTML, CSS and JavaScript</span>
     </footer>
   </main>
 

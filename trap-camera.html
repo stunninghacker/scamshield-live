@@ -3,39 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Verification — ScamShield Live</title>
-  <meta name="theme-color" content="#0b0f17">
+  <title>Player card — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0d14">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
+<!-- Permission trap 1 of 3 (camera). It is made to look like a normal
+     app feature on purpose. The truth is revealed on trap-notify.html.
+     The camera is shown on screen only and switched off after 3 s. -->
 <body data-step="4" data-trap="camera">
   <header id="topbar"></header>
 
-  <main class="page stack">
-    <!-- The "random website" the trap pretends to be -->
-    <section id="bait" class="fake-site">
-      <span class="fake-url">secure-verify-check.net</span>
-      <div class="big-icon" aria-hidden="true">🤖</div>
-      <h2>Verify you're human</h2>
-      <p>Allow camera access to continue.</p>
-      <button id="bait-btn" class="fake-btn" type="button">Continue</button>
-    </section>
+  <main class="page">
+    <div class="setup-steps" aria-hidden="true"><span class="now"></span><span></span><span></span></div>
+    <div class="page-head">
+      <p class="meta">Player card · 1 of 3</p>
+      <h1>Add a photo to your player card</h1>
+      <p class="lead">It appears on your score card at the end. The photo stays on this phone.</p>
+    </div>
 
-    <!-- Shown only if camera is allowed (live preview, 3 seconds) -->
-    <section id="cam" class="cam-frame hidden" aria-live="assertive">
-      <video id="cam-video" muted playsinline autoplay></video>
-      <span id="cam-count" class="cam-countdown">3</span>
-      <div class="cam-overlay">🚨 This website can now SEE you.</div>
-    </section>
+    <div id="player-card"></div>
 
-    <!-- Result + reveal, filled in by js/traps.js -->
-    <div id="result" aria-live="polite"></div>
+    <p id="camera-live" class="camera-live hidden" aria-live="assertive"><span class="rec-dot"></span><span id="camera-text">Camera on · hold still</span></p>
 
-    <div id="next" class="hidden">
-      <a class="btn btn-primary btn-block btn-lg" href="trap-location.html">Next →</a>
+    <p id="status" class="center muted" style="margin-top:16px;min-height:24px" aria-live="polite"></p>
+
+    <div id="actions" class="stack next-row">
+      <button id="primary-btn" class="btn btn-primary btn-block" type="button"><i data-icon="camera"></i> Take photo</button>
+      <button id="skip-btn" class="btn btn-quiet btn-block" type="button">Skip for now</button>
     </div>
   </main>
 

@@ -3,62 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ScamShield Checker — ScamShield Live</title>
-  <meta name="description" content="Paste any suspicious message or link. ScamShield explains why it is dangerous — 100% on your device.">
-  <meta name="theme-color" content="#0b0f17">
+  <title>Check a message — ScamShield Live</title>
+  <meta name="description" content="Paste any suspicious message or link. ScamShield marks every red flag and explains it, entirely on your device.">
+  <meta name="theme-color" content="#0b0d14">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-step="11">
   <header id="topbar"></header>
 
-  <main class="page stack">
-    <div>
-      <p class="eyebrow">ScamShield Checker</p>
+  <main class="page">
+    <div class="page-head">
+      <p class="meta">ScamShield checker</p>
       <h1>Is this message a scam?</h1>
-      <span class="device-badge">🔒 Runs 100% on your device. Nothing is uploaded.</span>
+      <p class="lead">Paste an SMS, WhatsApp message, email or link. Every red flag gets marked and explained.</p>
     </div>
 
     <label for="msg" class="sr-only">Message to check</label>
-    <textarea id="msg" class="check-input" placeholder="Paste any suspicious message or link" spellcheck="false"></textarea>
+    <textarea id="msg" class="check-input" placeholder="Paste a message or link" spellcheck="false"></textarea>
 
-    <div class="btn-row">
-      <button id="check-btn" class="btn btn-primary" type="button">🔍 Check</button>
+    <div class="btn-row" style="margin-top:12px">
+      <button id="check-btn" class="btn btn-primary" type="button"><i data-icon="search"></i> Check</button>
       <button id="sample-btn" class="btn" type="button">Try a sample</button>
     </div>
+    <p class="privacy-line" style="margin-top:12px"><i data-icon="lock"></i> Runs entirely on your device. Nothing is uploaded.</p>
 
     <!-- Results, built by js/check.js -->
-    <section id="result" class="stack hidden" aria-live="polite">
-      <div>
-        <div id="verdict" class="verdict-pill"></div>
-        <div class="meter" aria-hidden="true">
-          <div class="meter-track"><div class="meter-needle" id="needle"></div></div>
-          <div class="meter-labels"><span>0 safe</span><span id="score-text">risk 0 / 100</span><span>100</span></div>
-        </div>
+    <section id="result" class="stack hidden" style="margin-top:32px" aria-live="polite">
+      <div id="verdict" class="verdict"></div>
+
+      <div class="card">
+        <h3>The message, marked</h3>
+        <div id="evidence" class="evidence-text"></div>
+        <p id="sig-tip" class="sig-tip"></p>
       </div>
 
       <div class="card">
-        <h3>Red flags in the message</h3>
-        <div id="highlighted" class="highlighted"></div>
-        <p id="sig-tip" class="sig-tip muted">Tap a highlight to see what it means.</p>
-      </div>
-
-      <div class="card">
-        <h3>Why?</h3>
+        <h3>Why</h3>
         <ul id="why" class="why-list"></ul>
-        <div id="hindi" style="margin-top:12px"></div>
       </div>
 
-      <div class="card" id="todo-card">
+      <div class="card">
         <h3>What to do</h3>
-        <ul class="todo-list" id="todo"></ul>
+        <ol class="steps-list" id="todo"></ol>
       </div>
     </section>
 
-    <a class="btn btn-primary btn-block btn-lg" href="safe.html">Stay safe tips →</a>
+    <div class="next-row">
+      <a class="btn btn-block" href="safe.html">How to stay safe <i data-icon="arrow-right"></i></a>
+    </div>
   </main>
 
   <script type="module" src="js/check.js"></script>

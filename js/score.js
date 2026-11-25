@@ -1,10 +1,10 @@
 // =====================================================================
 // score.js — Score Card (Page 9)
-// Works out the awareness score, shows the badge, and (survey mode only)
+// Works out the awareness score, shows the rank, and (survey mode only)
 // saves the anonymous result to the batch report — exactly once.
 // =====================================================================
 
-import { initPage, el, countUp, showToast, showStartOver, stars } from './ui.js';
+import { initPage, el, icon, countUp, growBar, showToast, showStartOver } from './ui.js';
 import { readState, updateState, isDemo } from './session.js';
 import { saveResult, isConfigured } from './firebase.js';
 
@@ -14,7 +14,7 @@ const TOTAL_ROUNDS = 8;
 
 // The formula (also shown on the page and the report):
 //   round(correct / 8 × 60) + 10 per blocked trap (max 30) + 10 if escaped
-export function awarenessScore(correct, traps, escaped) {
+function awarenessScore(correct, traps, escaped) {
   let score = Math.round((correct / TOTAL_ROUNDS) * 60);
   let blocked = 0;
   for (const name of ['camera', 'location', 'notify']) {
@@ -25,11 +25,11 @@ export function awarenessScore(correct, traps, escaped) {
   return score;
 }
 
-export function badgeFor(awareness) {
-  if (awareness >= 85) return { icon: '🥷', name: 'Cyber Ninja' };
-  if (awareness >= 60) return { icon: '🛡️', name: 'Alert Citizen' };
-  if (awareness >= 35) return { icon: '⚠️', name: 'Needs Practice' };
-  return { icon: '🎯', name: 'Easy Target' };
+function rankFor(awareness) {
+  if (awareness >= 85) return { icon: 'shield-check', name: 'Cyber Ninja', sub: '85 and above' };
+  if (awareness >= 60) return { icon: 'shield', name: 'Alert Citizen', sub: '60 to 84' };
+  if (awareness >= 35) return { icon: 'shield-alert', name: 'Needs Practice', sub: '35 to 59' };
+  return { icon: 'triangle-alert', name: 'Easy Target', sub: 'below 35' };
 }
 
 // Is the whole journey finished? (Only full runs go into the report.)
@@ -42,59 +42,58 @@ function isComplete(state) {
     state.story !== null;
 }
 
-function trapText(value) {
-  if (value === 'block') return { text: '✅ Blocked', cls: 'res-good' };
-  if (value === 'allow') return { text: '❌ Allowed', cls: 'res-bad' };
-  if (value === 'unsupported') return { text: '— Not supported', cls: 'res-neutral' };
-  return { text: '— Skipped', cls: 'res-neutral' };
+function trapResult(value) {
+  if (value === 'block') return { text: 'Blocked', cls: 'is-good' };
+  if (value === 'allow') return { text: 'Allowed', cls: 'is-bad' };
+  if (value === 'unsupported') return { text: 'Not available', cls: 'is-neutral' };
+  return { text: 'Skipped', cls: 'is-neutral' };
 }
 
-function resultRow(label, value) {
-  return el('li', {}, [el('span', {}, label), el('span', { className: 'res ' + value.cls }, value.text)]);
+function row(label, result) {
+  return el('li', {}, [el('span', { className: 'label' }, label), el('span', { className: 'value ' + result.cls }, result.text)]);
 }
 
 async function main() {
   const state = readState();
   const page = document.getElementById('score-page');
   if (!state || state.rounds.length === 0 || state.story === null) {
-    showStartOver(page, 'Play the game and the story first, then your score card appears here.');
+    showStartOver(page, 'Play the game and the final call first. Your score card appears after that.');
     return;
   }
 
   // ---- Numbers ----
   const correct = state.rounds.filter((r) => r.correct).length;
+  const played = state.rounds.length;
   const escaped = state.story.escaped;
   const awareness = awarenessScore(correct, state.traps, escaped);
-  const badge = badgeFor(awareness);
+  const rank = rankFor(awareness);
 
-  countUp(document.getElementById('correct'), correct, '', 900);
-  countUp(document.getElementById('awareness'), awareness, '', 1200);
-  document.getElementById('badge-icon').textContent = badge.icon;
-  document.getElementById('badge-name').textContent = badge.name;
-  if (state.rounds.length < TOTAL_ROUNDS) {
-    document.getElementById('score-sub').textContent =
-      'messages judged correctly (demo: ' + state.rounds.length + ' of 8 rounds played)';
-  }
+  countUp(document.getElementById('awareness'), awareness, '', 1100);
+  growBar(document.getElementById('awareness-fill'), awareness / 100);
+  document.getElementById('rank-icon').replaceChildren(icon(rank.icon));
+  document.getElementById('rank-name').textContent = rank.name;
+  document.getElementById('rank-sub').textContent = rank.sub;
 
   // ---- Confidence vs reality ----
   const conf = state.confidence || 0;
-  let verdictLine = 'Your confidence matched your result. Nice self-awareness!';
-  if (conf >= 4 && correct < 7) verdictLine = '😬 You felt confident, but the scams got you. That is exactly how scammers win.';
-  else if (conf <= 2 && correct >= 7) verdictLine = '🙂 You doubted yourself, but you did great!';
+  let verdictLine = 'Your confidence matched how you did.';
+  if (conf >= 4 && correct < 7) verdictLine = 'You felt sure, and the scams still got through. That gap is exactly what scammers count on.';
+  else if (conf <= 2 && correct >= 7) verdictLine = 'You doubted yourself, and did better than you thought.';
   document.getElementById('confidence-card').replaceChildren(
     el('h3', {}, 'Confidence vs reality'),
-    el('p', { style: 'margin:0 0 6px' }, ['You rated yourself ', el('span', { style: 'color:#facc15', ariaLabel: conf + ' out of 5 stars' }, stars(conf)), ' and got ' + correct + ' / 8 right.']),
-    el('p', { className: 'muted', style: 'margin:0' }, verdictLine)
+    el('ul', { className: 'rows' }, [
+      row('You rated yourself', { text: conf + ' of 5', cls: '' }),
+      row('Messages judged right', { text: correct + ' of ' + TOTAL_ROUNDS + (played < TOTAL_ROUNDS ? ' (' + played + ' played)' : ''), cls: '' }),
+    ]),
+    el('p', { className: 'muted' }, verdictLine)
   );
 
   // ---- Result list ----
   document.getElementById('result-list').replaceChildren(
-    resultRow('📸 Camera trap', trapText(state.traps.camera)),
-    resultRow('📍 Location trap', trapText(state.traps.location)),
-    resultRow('🔔 Notification trap', trapText(state.traps.notify)),
-    resultRow('👮 Digital arrest story', escaped
-      ? { text: '✅ Escaped', cls: 'res-good' }
-      : { text: '❌ Lost ₹4,20,000', cls: 'res-bad' })
+    row('Camera', trapResult(state.traps.camera)),
+    row('Location', trapResult(state.traps.location)),
+    row('Notifications', trapResult(state.traps.notify)),
+    row('The "CBI" call', escaped ? { text: 'Escaped', cls: 'is-good' } : { text: 'Lost ₹4,20,000', cls: 'is-bad' })
   );
 
   // ---- Share ----
@@ -120,21 +119,21 @@ async function main() {
   });
   if (ok) {
     updateState((s) => { s.saved = true; });
-    showToast('✔ Your anonymous result was added to the batch report');
+    showToast('Your anonymous result was added to the batch report');
   }
 }
 
 async function share(awareness) {
   // Link to the home page of this site.
   const link = window.location.href.split('?')[0].replace(/score\.html$/, '');
-  const text = 'I scored ' + awareness + '/100 on ScamShield Live 🛡️ Can you beat me? ' + link;
+  const text = 'I scored ' + awareness + '/100 on ScamShield Live. Can you beat me? ' + link;
   try {
     if (navigator.share) {
       await navigator.share({ title: 'ScamShield Live', text: text });
       return;
     }
     await navigator.clipboard.writeText(text);
-    showToast('📋 Copied! Paste it in your group chat.');
+    showToast('Copied. Paste it in your group chat', 'check');
   } catch (err) {
     // User closed the share sheet, or clipboard blocked: nothing to do.
   }

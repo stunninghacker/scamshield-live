@@ -6,6 +6,7 @@
 //   short    short name (used in the report chart)
 //   type     how it is drawn: 'sms' | 'whatsapp' | 'email' | 'upi' | 'qr'
 //   sender   who it appears to come from
+//   time     time shown on the message
 //   subject  (email only)
 //   amount   (upi only)
 //   text     the message itself (this is what the engine checks)
@@ -23,6 +24,7 @@ export const ROUNDS = [
     short: 'Fake KYC SMS',
     type: 'sms',
     sender: 'VK-SBIKYC',
+    time: '9:38 am',
     text: 'Dear SBI customer, your account will be BLOCKED today due to incomplete KYC. ' +
       'Update KYC immediately at http://sbi-kyc-update.xyz/verify to avoid suspension.',
     answer: 'scam',
@@ -34,6 +36,7 @@ export const ROUNDS = [
     short: 'Bank debit alert',
     type: 'sms',
     sender: 'AD-HDFCBK',
+    time: '1:12 pm',
     text: 'Rs.1,250 debited from A/c XX4821 on 18-Nov at AMAZON PAY. Avl bal Rs.23,410. ' +
       'Not you? Call the number on the back of your card. -HDFC Bank',
     answer: 'legit',
@@ -45,6 +48,7 @@ export const ROUNDS = [
     short: 'Part-time job',
     type: 'whatsapp',
     sender: '+91 98XXX X2741',
+    time: '11:04 am',
     text: 'Hello dear 😊 We are hiring for a part-time job. Work from home and earn ₹5000/day ' +
       'just by liking YouTube videos. No experience needed! Join our Telegram group to start today.',
     answer: 'scam',
@@ -56,6 +60,7 @@ export const ROUNDS = [
     short: 'Courier fee',
     type: 'sms',
     sender: 'JX-INPOST',
+    time: '6:47 pm',
     text: 'India Post: Your parcel is on hold due to incomplete address. Pay ₹25 re-delivery fee ' +
       'within 24 hours: https://bit.ly/ip-redeliver',
     answer: 'scam',
@@ -67,6 +72,7 @@ export const ROUNDS = [
     short: 'Login OTP',
     type: 'sms',
     sender: 'BZ-SWIGGY',
+    time: '8:15 pm',
     text: '123456 is your login OTP. Do not share it with anyone.',
     answer: 'legit',
     explain: 'A real OTP that YOU requested, warning you not to share it. Safe — as long as you never share it.',
@@ -77,6 +83,7 @@ export const ROUNDS = [
     short: 'UPI cashback',
     type: 'upi',
     sender: 'cashback.rewards@ybl',
+    time: '4:20 pm',
     amount: '₹5,000',
     text: 'Congratulations! Receive ₹5,000 cashback from cashback.rewards@ybl. Enter your UPI PIN to accept.',
     answer: 'scam',
@@ -88,6 +95,7 @@ export const ROUNDS = [
     short: 'Refund QR',
     type: 'qr',
     sender: '+91 70XXX X8815',
+    time: '10:51 pm',
     text: 'Hi, this is the online shopping refund desk. Your refund of ₹1,499 is approved. ' +
       'Scan this QR code to receive your refund directly in your bank account.',
     answer: 'scam',
@@ -99,6 +107,7 @@ export const ROUNDS = [
     short: 'Exam email',
     type: 'email',
     sender: 'Examination Cell <exam.cell@university.edu.in>',
+    time: '10:00 am',
     subject: 'End-Semester Examination Timetable released',
     text: 'Dear Students,\n\nThe timetable for the End-Semester Examinations has been released. ' +
       'Please check it on the official university ERP portal under Examinations > Timetable. ' +

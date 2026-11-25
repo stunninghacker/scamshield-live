@@ -5,7 +5,7 @@
 // (except one city lookup, whose answer is only shown on screen).
 // =====================================================================
 
-import { initPage, el, typeText, sleep, reducedMotion } from './ui.js';
+import { initPage, el, icon, typeText, sleep, reducedMotion } from './ui.js';
 
 initPage();
 
@@ -90,7 +90,7 @@ async function getBattery() {
   try {
     const b = await navigator.getBattery();
     const pct = Math.round(b.level * 100) + '%';
-    return pct + (b.charging ? ' · charging ⚡' : ' · not charging');
+    return pct + (b.charging ? ' · charging' : ' · not charging');
   } catch (err) {
     return null;
   }
@@ -123,7 +123,7 @@ function getLanguage() {
 }
 
 function getDarkMode() {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark mode ON 🌙' : 'Dark mode OFF ☀️';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark mode on' : 'Dark mode off';
 }
 
 function getHardware() {
@@ -133,15 +133,15 @@ function getHardware() {
   return parts.length ? parts.join(' · ') : 'Hidden by this browser';
 }
 
-// ---------- Showing the cards one by one ----------
+// ---------- Showing the rows one by one ----------
 
-function addCard(icon, label) {
+function addRow(iconName, label) {
   const valueEl = el('div', { className: 'value' });
-  const card = el('div', { className: 'mirror-card' }, [
-    el('div', { className: 'icon', ariaHidden: 'true' }, icon),
+  const row = el('li', {}, [
+    icon(iconName),
     el('div', {}, [el('div', { className: 'label' }, label), valueEl]),
   ]);
-  document.getElementById('mirror-list').appendChild(card);
+  document.getElementById('ledger').appendChild(row);
   return valueEl;
 }
 
@@ -152,22 +152,22 @@ async function run() {
   const cityPromise = getCity();
 
   const items = [
-    { icon: '📱', label: 'Device / OS', value: devicePromise },
-    { icon: '🌐', label: 'Browser', value: getBrowser() },
-    { icon: '🖥️', label: 'Screen', value: getScreen() },
-    { icon: '🔋', label: 'Battery', value: batteryPromise, optional: true },
-    { icon: '🕐', label: 'Local time & timezone', value: getLocalTime() },
-    { icon: '📍', label: 'Approximate city', value: cityPromise },
-    { icon: '🗣️', label: 'Language', value: getLanguage() },
-    { icon: '🌗', label: 'Display theme', value: getDarkMode() },
-    { icon: '💻', label: 'CPU & memory', value: getHardware() },
+    { icon: 'smartphone', label: 'Device', value: devicePromise },
+    { icon: 'globe', label: 'Browser', value: getBrowser() },
+    { icon: 'monitor', label: 'Screen', value: getScreen() },
+    { icon: 'battery-charging', label: 'Battery', value: batteryPromise, optional: true },
+    { icon: 'clock', label: 'Local time and timezone', value: getLocalTime() },
+    { icon: 'map-pin', label: 'Approximate city', value: cityPromise },
+    { icon: 'languages', label: 'Languages', value: getLanguage() },
+    { icon: 'sun-moon', label: 'Display theme', value: getDarkMode() },
+    { icon: 'cpu', label: 'Processor and memory', value: getHardware() },
   ];
 
   const gap = reducedMotion() ? 0 : 400;
   for (const item of items) {
     const value = await item.value; // wait if it is a promise
-    if (item.optional && !value) continue; // e.g. no battery on iPhone
-    const valueEl = addCard(item.icon, item.label);
+    if (item.optional && !value) continue; // e.g. no battery info on iPhone
+    const valueEl = addRow(item.icon, item.label);
     typeText(valueEl, String(value), 22);
     await sleep(gap);
   }

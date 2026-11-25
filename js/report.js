@@ -5,7 +5,7 @@
 // offline snapshot file (assets/report-snapshot.json).
 // =====================================================================
 
-import { initPage, el, countUp } from './ui.js';
+import { initPage, el, countUp, growBar } from './ui.js';
 import { isDemo } from './session.js';
 import { loadResults } from './firebase.js';
 import { ROUNDS } from './rounds.js';
@@ -53,15 +53,23 @@ async function loadSnapshot() {
 
 // ---------- Drawing ----------
 
-function tile(icon, value, suffix, label, wide) {
-  const num = el('div', { className: 't-num' }, '0' + suffix);
-  const box = el('div', { className: 'tile' + (wide ? ' wide' : '') }, [
-    el('div', { className: 't-icon', ariaHidden: 'true' }, icon),
-    num,
-    el('div', { className: 't-label' }, label),
-  ]);
+// A stat card: a label and a number. Nothing else.
+function stat(label, value, suffix) {
+  const num = el('div', { className: 's-num' }, '0' + suffix);
   countUp(num, value, suffix, 1200);
-  return box;
+  return el('div', { className: 'stat' }, [el('div', { className: 's-label' }, label), num]);
+}
+
+// One bar of the confidence gap.
+function gapRow(cls, label, pct) {
+  const fill = el('div', { className: 'gap-fill' });
+  growBar(fill, pct / 100);
+  const num = el('span', { className: 'pct' }, '0%');
+  countUp(num, pct, '%', 1200);
+  return el('div', { className: 'gap-row ' + cls }, [
+    el('div', { className: 'top' }, [el('span', { className: 'label' }, label), num]),
+    el('div', { className: 'gap-track', role: 'img', ariaLabel: label + ': ' + pct + '%' }, fill),
+  ]);
 }
 
 function drawReport(results) {
@@ -73,22 +81,20 @@ function drawReport(results) {
 
   countUp(document.getElementById('n'), n, '', 900);
 
-  // Hero: the confidence gap
-  document.getElementById('gap-banner').replaceChildren(
-    el('span', { className: 'felt' }, [el('span', { className: 'num' }, felt + '%'), ' felt confident.']),
-    el('br'),
-    el('span', { className: 'were' }, ['Only ', el('span', { className: 'num' }, were + '%'), ' actually were.'])
+  // The moment: the confidence gap
+  document.getElementById('gap').replaceChildren(
+    el('p', { className: 'gap-title' }, felt + '% felt confident. Only ' + were + '% actually were.'),
+    gapRow('gap-felt', 'Rated themselves 4 or 5 out of 5', felt),
+    gapRow('gap-were', 'Judged 7 or 8 messages right', were)
   );
 
   document.getElementById('tiles').replaceChildren(
-    tile('🧠', avgAwareness, '', 'Average awareness score (out of 100)'),
-    tile('😎', felt, '%', 'Rated themselves 4–5 ⭐'),
-    tile('🎯', were, '%', 'Actually scored 7/8 or more'),
-    tile('📸', percentAllowed(results, 'camera'), '%', 'Allowed the camera'),
-    tile('📍', percentAllowed(results, 'location'), '%', 'Allowed location'),
-    tile('🔔', percentAllowed(results, 'notify'), '%', 'Allowed notifications'),
-    tile('💸', lost, '%', 'Lost money in the "digital arrest" story', true)
+    stat('Allowed the camera', percentAllowed(results, 'camera'), '%'),
+    stat('Allowed their location', percentAllowed(results, 'location'), '%'),
+    stat('Allowed notifications', percentAllowed(results, 'notify'), '%'),
+    stat('Lost money on the "CBI" call', lost, '%')
   );
+  countUp(document.getElementById('avg'), avgAwareness, '', 1200);
 
   drawBars(results);
 }
@@ -104,14 +110,12 @@ function drawBars(results) {
   const rows = ROUNDS.map((round, i) => {
     const fill = el('div', { className: 'bar-fill' });
     const isWorst = fooled[i] === worst && worst > 0;
-    const row = el('div', { className: 'bar-row' + (isWorst ? ' worst' : '') }, [
-      el('span', { className: 'bar-label' }, (isWorst ? '⚠ ' : '') + round.short),
-      el('div', { className: 'bar-track', role: 'img', ariaLabel: round.short + ': ' + fooled[i] + '% fooled' }, fill),
+    growBar(fill, fooled[i] / 100);
+    return el('div', { className: 'bar-row' + (isWorst ? ' worst' : '') }, [
+      el('span', { className: 'bar-label' }, round.short),
+      el('div', { className: 'bar-track', role: 'img', ariaLabel: round.short + ': ' + fooled[i] + '% fooled' + (isWorst ? ', the most' : '') }, fill),
       el('span', { className: 'bar-pct' }, fooled[i] + '%'),
     ]);
-    // animate after it is on screen
-    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = fooled[i] + '%'; }));
-    return row;
   });
   document.getElementById('bars').replaceChildren(...rows);
 }
@@ -119,7 +123,7 @@ function drawBars(results) {
 function drawCollecting(count) {
   document.getElementById('collecting').classList.remove('hidden');
   document.getElementById('collecting-count').textContent =
-    count === 0 ? 'No results yet.' : count + (count === 1 ? ' result' : ' results') + ' so far. Need at least ' + MIN_RESULTS + '.';
+    count === 0 ? 'No results yet. Share the link with your batch.' : count + (count === 1 ? ' result' : ' results') + ' so far. The report opens at ' + MIN_RESULTS + '. Share the link with your batch.';
 
   // QR code that points to this website's home page.
   const siteUrl = window.location.href.split('?')[0].replace(/report\.html$/, '');
@@ -153,17 +157,17 @@ function setupExport(results) {
 
 async function main() {
   let results = await loadResults();
-  let sourceText = 'Live data from Firebase · calculated on this device';
+  let sourceText = 'Live results, calculated on this device';
 
   if (results === null) {
     const snapshot = await loadSnapshot();
     if (snapshot) {
       results = snapshot.results;
       const when = snapshot.exportedAt ? new Date(snapshot.exportedAt).toLocaleString() : 'unknown time';
-      sourceText = '📦 Offline snapshot from ' + when;
+      sourceText = 'Offline snapshot from ' + when;
     } else {
       results = [];
-      sourceText = 'Results database not connected yet.';
+      sourceText = 'The results database is not connected yet';
     }
   }
 

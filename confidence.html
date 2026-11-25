@@ -3,24 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Confidence Check — ScamShield Live</title>
-  <meta name="theme-color" content="#0b0f17">
+  <title>Your confidence — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0d14">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-step="3">
   <header id="topbar"></header>
 
   <main class="page">
-    <p class="eyebrow">Confidence Check</p>
-    <h1>How good are you at spotting scams?</h1>
-    <p class="muted">Be honest. Tap the stars.</p>
+    <div class="page-head">
+      <p class="meta">Before we start</p>
+      <h1>How good are you at spotting scams?</h1>
+      <p class="lead">Be honest. We'll compare this with how you actually do.</p>
+    </div>
 
-    <div class="stars" id="stars" role="radiogroup" aria-label="Your confidence, 1 to 5 stars"></div>
-    <p class="star-caption" id="star-caption" aria-live="polite"></p>
+    <div class="scale" id="scale" role="radiogroup" aria-label="Your confidence from 1 to 5"></div>
+    <div class="scale-ends" aria-hidden="true"><span>Not good at all</span><span>Nobody can fool me</span></div>
+    <p class="scale-caption" id="caption" aria-live="polite"></p>
   </main>
 
   <script type="module">
@@ -29,39 +32,29 @@
 
     initPage();
 
-    const captions = ['', 'Not good at all', 'A little', 'Okay', 'Pretty good', 'Nobody can fool me 😎'];
-    const starsBox = document.getElementById('stars');
-    const caption = document.getElementById('star-caption');
+    const captions = ['', 'Not good at all', 'A little', 'Somewhat', 'Pretty good', 'Nobody can fool me'];
+    const box = document.getElementById('scale');
+    const caption = document.getElementById('caption');
     const buttons = [];
     let chosen = false;
 
-    // Light up stars 1..n
-    function light(n) {
-      buttons.forEach((b, i) => b.classList.toggle('on', i < n));
-      caption.textContent = captions[n] || '';
-    }
-
+    // Build the 5 buttons.
     for (let n = 1; n <= 5; n++) {
-      const star = el('button', {
-        className: 'star',
-        type: 'button',
-        role: 'radio',
-        ariaChecked: 'false',
-        ariaLabel: n + (n === 1 ? ' star' : ' stars') + ': ' + captions[n],
-      }, '★');
-      star.addEventListener('mouseenter', () => { if (!chosen) light(n); });
-      star.addEventListener('click', () => choose(n));
-      buttons.push(star);
-      starsBox.appendChild(star);
+      const b = el('button', { type: 'button', role: 'radio', ariaChecked: 'false', ariaLabel: n + ': ' + captions[n] }, String(n));
+      b.addEventListener('click', () => choose(n));
+      buttons.push(b);
+      box.appendChild(b);
     }
-    starsBox.addEventListener('mouseleave', () => { if (!chosen) light(0); });
 
     // Save the answer, then move on after 600 ms.
     function choose(n) {
       if (chosen) return;
       chosen = true;
-      light(n);
-      buttons[n - 1].setAttribute('aria-checked', 'true');
+      buttons.forEach((b, i) => {
+        b.classList.toggle('on', i === n - 1);
+        b.setAttribute('aria-checked', i === n - 1 ? 'true' : 'false');
+      });
+      caption.textContent = captions[n];
       updateState((s) => { s.confidence = n; });
       setTimeout(() => goTo('trap-camera.html'), 600);
     }

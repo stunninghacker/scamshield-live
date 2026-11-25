@@ -3,60 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Batch Awareness Report — ScamShield Live</title>
-  <meta name="theme-color" content="#0b0f17">
+  <title>Batch report — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0d14">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-step="10">
   <header id="topbar"></header>
 
-  <main class="page stack">
-    <p class="eyebrow">Batch Awareness Report</p>
-
+  <main class="page stack-lg">
     <div id="loading" class="card center muted">Loading results…</div>
 
     <!-- Fewer than 5 results -->
     <section id="collecting" class="card center hidden">
-      <div style="font-size:2.4rem" aria-hidden="true">📊</div>
-      <h2>Collecting data… share the link!</h2>
+      <p class="meta">Batch report</p>
+      <h2>Still collecting results</h2>
       <p class="muted" id="collecting-count"></p>
       <div class="qr-box" id="qr-box"></div>
-      <p class="small muted" id="site-link"></p>
+      <p class="small faint mono" id="site-link"></p>
     </section>
 
     <!-- The full report -->
-    <section id="report" class="stack hidden">
-      <div class="report-head">
-        <div class="n" id="n">0</div>
-        <div>👥 students tested</div>
+    <section id="report" class="stack-lg hidden">
+      <div>
+        <p class="meta">Batch report</p>
+        <div class="big-n" id="n" style="margin-top:12px">0</div>
+        <p class="muted" style="margin-top:8px">students from our batch took the test · average awareness <span class="num" id="avg">0</span> / 100</p>
       </div>
 
-      <div class="gap-banner" id="gap-banner"></div>
+      <div class="gap" id="gap"></div>
 
-      <div class="stat-grid" id="tiles"></div>
+      <div class="stack">
+        <h2>What they gave away</h2>
+        <div class="stat-grid" id="tiles"></div>
+      </div>
 
       <div class="card">
-        <h3>% fooled per round</h3>
-        <div class="bars" id="bars"></div>
+        <h3>Who got fooled, message by message</h3>
+        <div class="bars" id="bars" style="margin-top:16px"></div>
       </div>
 
-      <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per trap blocked (max 30) + 10 if escaped the story</p>
+      <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per permission blocked (max 30) + 10 if escaped the call</p>
 
-      <div class="callout callout-warning center">
-        <strong>We think we're safe. We're not.</strong>
-        <p>That's why cyber awareness matters.</p>
+      <div class="reveal-head">
+        <h2>We think we're safe. The numbers say we're not.</h2>
+        <p class="muted">That's why cyber awareness matters.</p>
       </div>
     </section>
 
-    <p class="source-note" id="source-note"></p>
+    <p class="small faint" id="source-note"></p>
 
-    <button id="export-btn" class="btn btn-block hidden" type="button">⬇ Export snapshot (demo)</button>
-
-    <a class="btn btn-primary btn-block btn-lg" href="check.html">How do we fix this? →</a>
+    <div class="stack">
+      <a class="btn btn-primary btn-block" href="check.html">How do we fix this? <i data-icon="arrow-right"></i></a>
+      <button id="export-btn" class="btn btn-block hidden" type="button"><i data-icon="download"></i> Export snapshot</button>
+    </div>
   </main>
 
   <!-- Small QR code library (only used when we show the QR) -->

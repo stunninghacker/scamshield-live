@@ -3,41 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Your Score Card — ScamShield Live</title>
-  <meta name="theme-color" content="#0b0f17">
+  <title>Your score — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0d14">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-step="9">
   <header id="topbar"></header>
 
-  <main class="page stack" id="score-page">
-    <div>
-      <p class="eyebrow">Your Score Card</p>
-      <div class="big-score" aria-live="polite"><span id="correct">0</span><span class="of"> / 8</span></div>
-      <p class="center muted" id="score-sub">messages judged correctly</p>
-    </div>
+  <main class="page stack-lg" id="score-page">
+    <section>
+      <p class="meta" style="margin-bottom:16px">Your score card</p>
+      <div class="score-hero">
+        <div>
+          <div class="score-figure" aria-live="polite"><span id="awareness">0</span><span class="of"> / 100</span></div>
+          <p class="muted" style="margin-top:12px">Awareness score</p>
+        </div>
+        <div class="rank">
+          <span id="rank-icon"></span>
+          <div class="rank-name" id="rank-name"></div>
+          <div class="rank-sub" id="rank-sub"></div>
+        </div>
+      </div>
+      <div class="awareness-bar"><span id="awareness-fill"></span></div>
+    </section>
 
-    <div class="badge" id="badge">
-      <div class="badge-icon" id="badge-icon" aria-hidden="true"></div>
-      <div class="badge-name" id="badge-name"></div>
-      <div class="awareness">Awareness score: <span id="awareness">0</span> / 100</div>
-    </div>
+    <section class="card" id="confidence-card"></section>
 
-    <div class="card" id="confidence-card"></div>
-
-    <div class="card">
+    <section class="card">
       <h3>Your results</h3>
-      <ul class="result-list" id="result-list"></ul>
+      <ul class="rows" id="result-list"></ul>
+    </section>
+
+    <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per permission blocked (max 30) + 10 if you escaped the call</p>
+
+    <div class="stack">
+      <a class="btn btn-primary btn-block" href="report.html">See how your batch did <i data-icon="arrow-right"></i></a>
+      <button class="btn btn-block" id="share-btn" type="button"><i data-icon="share-2"></i> Share my score</button>
     </div>
-
-    <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per trap blocked (max 30) + 10 if you escaped the story</p>
-
-    <button class="btn btn-block" id="share-btn" type="button">📤 Share my score</button>
-    <a class="btn btn-primary btn-block btn-lg" href="report.html">See batch report →</a>
   </main>
 
   <script type="module" src="js/score.js"></script>

@@ -5,7 +5,7 @@
 // Three "A" choices = you lose the money.
 // =====================================================================
 
-import { initPage, el, sleep, reducedMotion } from './ui.js';
+import { initPage, el, icon, sleep, reducedMotion } from './ui.js';
 import { updateState, pageLink } from './session.js';
 
 initPage();
@@ -14,19 +14,19 @@ initPage();
 const STEPS = [
   {
     officer: ['Hello, this is CBI Officer R. Sharma, Delhi.',
-      '👮 Your Aadhaar is linked to a money laundering case. A warrant is issued.'],
+      'Your Aadhaar is linked to a money laundering case. A warrant is issued.'],
     a: 'I\'m scared, what do I do?',
     b: 'I\'ll hang up and call 1930.',
   },
   {
     officer: ['Do not tell anyone. Not your parents, not your friends.',
-      '👮 This is confidential. Stay on video call. You are under digital arrest.'],
+      'This is confidential. Stay on video call. You are under digital arrest.'],
     a: 'Okay sir.',
     b: 'Police never arrest anyone on a video call.',
   },
   {
     officer: ['To prove you are innocent, your money must be checked.',
-      '👮 Transfer ₹4,20,000 to the RBI safe account for verification.'],
+      'Transfer ₹4,20,000 to the RBI safe account for verification.'],
     a: 'Sending now.',
     b: 'Block and report.',
   },
@@ -76,8 +76,8 @@ async function playStep(index) {
 
 function showChoices(index) {
   const step = STEPS[index];
-  const btnA = el('button', { className: 'btn btn-block', type: 'button' }, 'A · ' + step.a);
-  const btnB = el('button', { className: 'btn btn-block', type: 'button' }, 'B · ' + step.b);
+  const btnA = el('button', { className: 'btn btn-block', type: 'button' }, [el('span', { className: 'letter' }, 'A'), step.a]);
+  const btnB = el('button', { className: 'btn btn-block', type: 'button' }, [el('span', { className: 'letter' }, 'B'), step.b]);
   btnA.addEventListener('click', () => choose(index, 'a'));
   btnB.addEventListener('click', () => choose(index, 'b'));
   choicesBox.replaceChildren(btnA, btnB);
@@ -109,28 +109,31 @@ function finish(escaped) {
   let card;
   if (escaped) {
     card = el('div', { className: 'ending ending-escaped' }, [
-      el('h2', {}, '🛡️ You escaped!'),
-      el('p', {}, 'Real police, CBI or RBI NEVER arrest or ask for money on a video call.'),
+      el('p', { className: 'meta' }, 'You hung up · nothing lost'),
+      el('div', { className: 'ending-figure' }, '₹0'),
+      el('h2', {}, 'You escaped'),
+      el('p', { className: 'muted' }, 'Real police, CBI or RBI never arrest anyone or ask for money on a video call.'),
     ]);
   } else {
-    document.body.classList.add('lost-bg');
     card = el('div', { className: 'ending ending-lost' }, [
-      el('h2', {}, '💸 ₹4,20,000 lost.'),
-      el('p', {}, 'This is a real scam pattern reported across India.'),
-      el('p', { className: 'small' }, 'There is no such thing as "digital arrest". There is no "RBI safe account".'),
+      el('p', { className: 'meta' }, 'Transfer sent · money lost'),
+      el('div', { className: 'ending-figure' }, '₹4,20,000'),
+      el('h2', {}, 'This is a real scam pattern reported across India'),
+      el('p', { className: 'muted' }, 'There is no such thing as "digital arrest", and there is no "RBI safe account".'),
     ]);
   }
 
   endingBox.replaceChildren(
     card,
-    el('p', { className: 'center', style: 'margin-top:16px;font-weight:600' }, [
-      'Report fraud: call ',
-      el('a', { href: 'tel:1930' }, '1930'),
-      ' or visit ',
-      el('a', { href: 'https://cybercrime.gov.in', target: '_blank', rel: 'noopener' }, 'cybercrime.gov.in'),
-      '.',
+    el('div', { className: 'note note-info', style: 'margin-top:24px' }, [
+      icon('phone'),
+      el('div', {}, [
+        el('div', { className: 'note-title' }, 'Report fraud: call 1930'),
+        el('p', {}, ['Or file a complaint at ',
+          el('a', { href: 'https://cybercrime.gov.in', target: '_blank', rel: 'noopener' }, 'cybercrime.gov.in')]),
+      ]),
     ]),
-    el('a', { className: 'btn btn-primary btn-block btn-lg', href: pageLink('score.html') }, 'See my score →')
+    el('a', { className: 'btn btn-primary btn-block', href: pageLink('score.html'), style: 'margin-top:24px' }, ['See my score', icon('arrow-right')])
   );
   endingBox.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
 }

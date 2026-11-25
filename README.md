@@ -13,9 +13,9 @@ Web version of the **ScamShield** Flutter app. No frameworks, no build step, no 
 | 1 Home | `index.html` | Start button, links to checker and report |
 | 2 Footprint Mirror | `mirror.html` + `js/mirror.js` | Shows what any website can read about you without asking |
 | 3 Confidence Check | `confidence.html` | 1–5 stars: "How good are you at spotting scams?" |
-| 4 Camera trap | `trap-camera.html` | Real camera prompt → 3-second preview → camera switched off |
-| 5 Location trap | `trap-location.html` | Fake parcel page → your position on a map (on your screen only) |
-| 6 Notification trap | `trap-notify.html` | **Fake** HTML permission box + fake spam pop-ups |
+| 4 Player card: photo | `trap-camera.html` | Permission trap 1. Looks like a normal app step. Real camera prompt → 3-second live preview → camera switched off |
+| 5 Player card: city | `trap-location.html` | Permission trap 2. Real location prompt → your exact position on a map (on your screen only) |
+| 6 Player card: alerts | `trap-notify.html` | Permission trap 3. **Fake** HTML permission box + fake spam pop-ups, then the reveal of all three |
 | 7 Spot the Scam | `game.html` + `js/game.js` + `js/rounds.js` | 8 rounds, 15 s timer, red flags highlighted by the engine |
 | 8 Digital Arrest | `story.html` + `js/story.js` | Fake "CBI officer" video-call chat with 3 choices |
 | 9 Score Card | `score.html` + `js/score.js` | Awareness score, badge, share; saves result once (survey mode) |
@@ -128,9 +128,9 @@ git commit -m "ScamShield Live"
 
 | Feature | What happens | What never happens |
 |---|---|---|
-| Camera trap | Live preview on your screen for 3 s, then every camera track is stopped | No photo, no recording, no upload, no canvas |
-| Location trap | Position shown on a map on your phone | Coordinates are never sent to us or saved (map tiles load from OpenStreetMap like any map app) |
-| Notification trap | A **fake** permission box made of HTML | `Notification.requestPermission()` is never called |
+| Camera (player card photo) | Live preview on your screen for 3 s, then every camera track is stopped | No photo, no recording, no upload, no canvas |
+| Location (player card city) | Position shown on a map on your phone | Coordinates are never sent to us or saved (map tiles load from OpenStreetMap like any map app) |
+| Notifications (player card alerts) | A **fake** permission box made of HTML | `Notification.requestPermission()` is never called |
 | Footprint Mirror | Browser info shown only to you; one city lookup via `ipapi.co` | Nothing stored or sent to us |
 | Checker | Runs 100% in the browser | No network request while checking (verify in DevTools → Network) |
 | Survey | Anonymous scores + allow/block choices | No personal data at all |
@@ -177,8 +177,8 @@ Open `index.html?demo` on your phone. Use a **mobile hotspot**, not college Wi-F
 | 0:00 | Home | 🎤 "Let's see how safe we really are online." |
 | 0:15 | Mirror | 🎤 "Before I say anything, look what my browser already revealed. I didn't ask permission for any of this. Every website can see it." |
 | 0:30 | Confidence | 🎤 "Remember your answer, because we'll check it at the end." |
-| 0:40 | Camera trap (tap **Allow**) | 🎤 "One tap. No hacking. That's all a scammer needs." |
-| 1:00 | Location + Notify traps | 🎤 "Fake delivery messages are one of the most common scams right now. Now it knows where I am, and can spam me forever." |
+| 0:40 | Player card: photo (tap **Take photo → Allow**) | 🎤 "It's asking for a photo for my score card. Sounds reasonable, right? One tap." |
+| 1:00 | City + alerts → the reveal | 🎤 "My city, then alerts for my result. Every request had a friendly reason." *(spam floods in, reveal appears)* "That wasn't a player card. In under a minute I gave a website my camera, my exact location, and the right to message me forever. No hacking. Just trust." |
 | 1:30 | Game: 3 rounds, then **Skip to story** | 🎤 "Would you spot this one? Most of our batch didn't." |
 | 2:30 | Story | 🎤 "People have lost their life savings to this exact script." |
 | 3:00 | Score | (quick look at the badge) |
@@ -210,3 +210,19 @@ Open `index.html?demo` on your phone. Use a **mobile hotspot**, not college Wi-F
 - [ ] Checker shows nothing uploaded (DevTools → Network is empty while checking)
 - [ ] 10 classmates test at once with no errors
 - [ ] Re-verify the Stay Safe numbers
+
+
+## 12. Design notes
+
+The interface was redesigned with the method from **unslop** by Damir Sokolovsky ([@heydamir](https://x.com/heydamir), [github.com/heydamir/unslop](https://github.com/heydamir/unslop), CC BY 4.0).
+
+- **Character:** candid, forensic, a little theatrical
+- **World:** an investigator's desk at night. Phone screenshots are the evidence, and red marker goes on the lines that lie
+- **Colour:** one dark "ink" neutral ramp, one teal accent used rarely (progress, selection), red only where it means danger
+- **Type:** IBM Plex Sans for the interface, IBM Plex Mono for figures and meta
+- **Icons:** line icons from [Lucide](https://lucide.dev) (ISC licence), all in `assets/icons.svg`. No emoji in the interface; emoji only appear inside the fake scam messages, because real scams use them
+- **Signature:** the hand-drawn red marker underline on flagged words (game and checker). Red = the attack itself (asks for a secret, money, remote access, a police threat, a risky link), amber = a pressure trick (panic, prize, easy job), dotted = a supporting hint (brand name, phone number)
+
+### Why the permission traps look trustworthy
+
+Real scams don't look scary. They look like a friendly app asking for something with a good reason. So pages 4 to 6 are a "player card" set-up that belongs to this site: a photo for your score card, your city for the batch map, an alert when the report is ready. Each has a "Skip" option, like real apps. Nothing reveals itself until the end of page 6, where one screen shows what each permission gave away, why it worked (borrowed trust, a helpful reason, one tap each) and how to reset the permissions in the browser. The camera still switches off after 3 seconds, the location never leaves the phone and the notification prompt is fake HTML.
