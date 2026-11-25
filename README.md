@@ -4,6 +4,10 @@
 
 Web version of the **ScamShield** Flutter app. No frameworks, no build step, no AI. The scam checker is a deterministic rule engine ported from Dart to JavaScript.
 
+**Live site:** https://stunninghacker.github.io/scamshield-live/ · [Engine tests](https://stunninghacker.github.io/scamshield-live/tests/engine.test.html) · Demo mode: [`?demo`](https://stunninghacker.github.io/scamshield-live/?demo)
+
+<img src="assets/qr.png" width="160" alt="QR code that opens https://stunninghacker.github.io/scamshield-live/">
+
 ---
 
 ## 1. What's inside
@@ -104,6 +108,8 @@ service cloud.firestore {
 
 ## 5. Deploy to GitHub Pages
 
+**Already done for this repo:** it is live at https://stunninghacker.github.io/scamshield-live/. Pages builds from `main` (root folder), so every push to `main` updates the site in about a minute. The steps below are how to set it up again on another account.
+
 ```powershell
 git init
 git add .
@@ -120,9 +126,9 @@ git commit -m "ScamShield Live"
 3. Repo → **Settings → Pages → Source: Deploy from a branch → main / (root) → Save**.
 4. After ~1 minute the site is live at `https://YOUR-USERNAME.github.io/scamshield-live/`.
 
-**QR code:** the report page draws a QR code for the live URL automatically (when there are fewer than 5 results). For a poster/slide, open the report on the live site and screenshot it, or save it as `assets/qr.png`.
+**QR code:** [`assets/qr.png`](assets/qr.png) opens https://stunninghacker.github.io/scamshield-live/. Use it on posters, slides and in the batch WhatsApp group. The report page also draws a QR code for the site automatically while there are fewer than 5 results.
 
-**Offline backup (night before the event):** open `report.html?demo` on the live site → press **⬇ Export snapshot** → put the downloaded file at `assets/report-snapshot.json` → commit and push. If Firebase is unreachable on stage, the report reads this file instead and says "📦 Offline snapshot from …".
+**Offline backup (night before the event):** open `report.html?demo` on the live site → press **Export snapshot** → put the downloaded file at `assets/report-snapshot.json` → commit and push. If Firebase is unreachable on stage, the report reads this file instead and says "Offline snapshot from …".
 
 ## 6. Privacy: how each feature practises what it preaches
 
