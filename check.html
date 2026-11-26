@@ -29,7 +29,44 @@
       <button id="check-btn" class="btn btn-primary" type="button"><i data-icon="search"></i> Check</button>
       <button id="sample-btn" class="btn" type="button">Try a sample</button>
     </div>
-    <p class="privacy-line" style="margin-top:12px"><i data-icon="lock"></i> Runs entirely on your device. Nothing is uploaded.</p>
+    <p class="privacy-line" style="margin-top:12px"><i data-icon="lock"></i> The scam checker runs on your device. Nothing is uploaded.</p>
+
+    <!-- Optional: bring your own AI key for a second opinion -->
+    <section class="ai-setup" style="margin-top:12px">
+      <button id="ai-toggle" class="ai-toggle" type="button" aria-expanded="false">
+        <i data-icon="plus"></i> <span id="ai-toggle-text">Add an AI second opinion (optional)</span>
+      </button>
+
+      <div id="ai-panel" class="ai-panel hidden">
+        <p class="small muted">Paste your own API key. It stays on this device, and is only ever sent to the provider you pick. Asking the AI sends the message to that provider.</p>
+
+        <div class="field">
+          <label for="ai-provider">Provider</label>
+          <select id="ai-provider">
+            <option value="gemini">Google Gemini</option>
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="openrouter">OpenRouter</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ai-key">API key</label>
+          <input id="ai-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key">
+          <p class="small faint" id="ai-key-hint"></p>
+        </div>
+
+        <div class="field">
+          <label for="ai-model">Model <span class="faint">(optional)</span></label>
+          <input id="ai-model" type="text" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="btn-row">
+          <button id="ai-save" class="btn btn-primary" type="button">Save key</button>
+          <button id="ai-forget" class="btn hidden" type="button"><i data-icon="rotate-ccw"></i> Forget my key</button>
+        </div>
+        <p id="ai-saved" class="small hidden" style="color:var(--pos)"></p>
+      </div>
+    </section>
 
     <!-- Results, built by js/check.js -->
     <section id="result" class="stack hidden" style="margin-top:32px" aria-live="polite">
@@ -45,6 +82,9 @@
         <h3>Why</h3>
         <ul id="why" class="why-list"></ul>
       </div>
+
+      <!-- The AI second opinion goes here (only if a key is set) -->
+      <div id="ai-result"></div>
 
       <div class="card">
         <h3>What to do</h3>

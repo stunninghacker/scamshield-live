@@ -1,15 +1,20 @@
 // =====================================================================
-// check.js — ScamShield Checker (Page 11)
+// check.js — ScamShield Checker (Page 8)
 // Paste a message -> the rule engine scores it -> we show the verdict,
 // a risk meter, the message with every red flag marked, and why.
 //
+// The rule engine runs fully on the device and uploads nothing. There
+// is an OPTIONAL "AI second opinion": if the person adds their own API
+// key (see js/ai.js), a button lets them send the message to their
+// chosen provider for a second view. It never changes the rule verdict.
+//
 // Safety: the message is the user's text, so we NEVER use innerHTML
 // with it. Every piece goes in with text nodes (see el() in ui.js).
-// This page makes NO network requests while checking.
 // =====================================================================
 
 import { initPage, el, icon, buildHighlighted, markerClass, mostSerious, growBar, reducedMotion } from './ui.js';
 import { analyze, SIGNAL_INFO, DEMO_SAMPLES, THRESHOLDS } from './engine.js';
+import { PROVIDERS, loadConfig, saveConfig, clearConfig, hasKey, analyzeWithAI } from './ai.js';
 
 initPage();
 
@@ -17,6 +22,7 @@ const input = document.getElementById('msg');
 const resultBox = document.getElementById('result');
 const tip = document.getElementById('sig-tip');
 let sampleIndex = 0;
+let lastText = ''; // the text of the latest check (for the AI button)
 
 const VERDICT_LOOK = {
   DANGEROUS: { icon: 'triangle-alert', word: 'Dangerous', line: 'Do not reply, click or pay' },
@@ -138,6 +144,149 @@ function showTodo(result) {
   document.getElementById('todo').replaceChildren(...items.map((t) => el('li', {}, t)));
 }
 
+// =====================================================================
+// The optional AI second opinion
+// =====================================================================
+
+const aiSlot = document.getElementById('ai-result');
+let engineVerdict = 'SAFE'; // the rule engine's verdict of the last check
+
+// Show (or hide) the "Ask the AI" card under the results.
+function renderAiSlot() {
+  const cfg = loadConfig();
+  if (!cfg) {
+    aiSlot.replaceChildren();
+    return;
+  }
+  const provider = PROVIDERS[cfg.provider].label;
+  const askBtn = el('button', { className: 'btn btn-block', type: 'button' }, [icon('sparkles'), 'Ask ' + provider]);
+  askBtn.addEventListener('click', () => askAI(cfg));
+  aiSlot.replaceChildren(el('div', { className: 'card ai-card' }, [
+    el('div', { className: 'ai-card-head' }, [icon('bot'), el('h3', {}, 'AI second opinion')]),
+    el('p', { className: 'small muted' }, 'Optional. This sends the message to ' + provider +
+      ' using your key. The rule engine above stays the real verdict.'),
+    askBtn,
+  ]));
+}
+
+// A coloured dot + word for an AI verdict.
+function aiVerdictPill(verdict) {
+  const look = VERDICT_LOOK[verdict] || VERDICT_LOOK.SUSPICIOUS;
+  return el('div', { className: 'ai-verdict v-' + verdict }, [icon(look.icon), el('span', {}, look.word)]);
+}
+
+async function askAI(cfg) {
+  const provider = PROVIDERS[cfg.provider].label;
+  aiSlot.replaceChildren(el('div', { className: 'card ai-card' }, [
+    el('div', { className: 'ai-card-head' }, [icon('bot'), el('h3', {}, 'AI second opinion')]),
+    el('p', { className: 'setup-status' }, [el('span', { className: 'spinner', ariaHidden: 'true' }), 'Asking ' + provider + '…']),
+  ]));
+
+  try {
+    const ai = await analyzeWithAI(lastText);
+    const agrees = ai.verdict === engineVerdict;
+    const compare = agrees
+      ? 'Agrees with the rule engine.'
+      : 'Disagrees with the rule engine (which said ' + VERDICT_LOOK[engineVerdict].word + '). When they differ, trust the stricter one and verify through the official app.';
+
+    aiSlot.replaceChildren(el('div', { className: 'card ai-card' }, [
+      el('div', { className: 'ai-card-head' }, [
+        icon('bot'),
+        el('h3', {}, 'AI second opinion'),
+        el('span', { className: 'ai-provider' }, provider),
+      ]),
+      el('div', { className: 'ai-verdict-row' }, [
+        aiVerdictPill(ai.verdict),
+        ai.confidence !== null ? el('span', { className: 'ai-confidence num' }, ai.confidence + '% sure') : null,
+      ]),
+      el('p', { className: 'small ' + (agrees ? 'muted' : 'ai-disagree') }, compare),
+      ai.reasons.length ? el('ul', { className: 'steps-list', style: 'margin-top:4px' }, ai.reasons.map((r) => el('li', {}, r))) : null,
+      ai.advice ? el('p', { className: 'small muted' }, ai.advice) : null,
+      el('p', { className: 'small faint' }, 'An AI can be wrong, and a scam message can try to trick it. It never changes the verdict above.'),
+      retryButton(cfg),
+    ]));
+  } catch (err) {
+    aiSlot.replaceChildren(el('div', { className: 'card ai-card' }, [
+      el('div', { className: 'ai-card-head' }, [icon('bot'), el('h3', {}, 'AI second opinion')]),
+      el('div', { className: 'note note-danger', style: 'margin-top:0' }, [
+        icon('triangle-alert'),
+        el('div', {}, [el('div', { className: 'note-title' }, 'Couldn\'t get an answer'), el('p', {}, err.message)]),
+      ]),
+      retryButton(cfg),
+    ]));
+  }
+}
+
+function retryButton(cfg) {
+  const btn = el('button', { className: 'btn btn-block', type: 'button', style: 'margin-top:12px' }, [icon('sparkles'), 'Ask again']);
+  btn.addEventListener('click', () => askAI(cfg));
+  return btn;
+}
+
+// ---------- The AI settings panel ----------
+function setupAiPanel() {
+  const toggle = document.getElementById('ai-toggle');
+  const toggleText = document.getElementById('ai-toggle-text');
+  const panel = document.getElementById('ai-panel');
+  const providerSel = document.getElementById('ai-provider');
+  const keyInput = document.getElementById('ai-key');
+  const keyHint = document.getElementById('ai-key-hint');
+  const modelInput = document.getElementById('ai-model');
+  const saveBtn = document.getElementById('ai-save');
+  const forgetBtn = document.getElementById('ai-forget');
+  const savedMsg = document.getElementById('ai-saved');
+
+  function reflectProvider() {
+    const p = PROVIDERS[providerSel.value];
+    keyHint.textContent = p.keyHint + ' · get one at ' + p.keyUrl;
+    if (!modelInput.value.trim()) modelInput.placeholder = p.defaultModel;
+  }
+
+  function reflectSaved() {
+    const cfg = loadConfig();
+    if (cfg) {
+      toggleText.textContent = 'AI second opinion: ' + PROVIDERS[cfg.provider].label + ' connected';
+      toggle.querySelector('use').setAttribute('href', 'assets/icons.svg#sparkles');
+      forgetBtn.classList.remove('hidden');
+      savedMsg.classList.remove('hidden');
+      savedMsg.textContent = 'Key saved on this device. Run a check, then tap "Ask".';
+      providerSel.value = cfg.provider;
+      modelInput.value = cfg.model && cfg.model !== PROVIDERS[cfg.provider].defaultModel ? cfg.model : '';
+    } else {
+      toggleText.textContent = 'Add an AI second opinion (optional)';
+      forgetBtn.classList.add('hidden');
+      savedMsg.classList.add('hidden');
+    }
+    reflectProvider();
+    renderAiSlot();
+  }
+
+  toggle.addEventListener('click', () => {
+    const open = panel.classList.toggle('hidden') === false;
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  providerSel.addEventListener('change', reflectProvider);
+
+  saveBtn.addEventListener('click', () => {
+    const key = keyInput.value.trim();
+    if (!key) {
+      keyInput.focus();
+      return;
+    }
+    saveConfig(providerSel.value, key, modelInput.value);
+    keyInput.value = '';
+    reflectSaved();
+  });
+
+  forgetBtn.addEventListener('click', () => {
+    clearConfig();
+    keyInput.value = '';
+    reflectSaved();
+  });
+
+  reflectSaved();
+}
+
 // ---------- Main ----------
 function runCheck() {
   const text = input.value;
@@ -145,12 +294,15 @@ function runCheck() {
     input.focus();
     return;
   }
+  lastText = text;
   const result = analyze(text);
+  engineVerdict = result.verdict;
   resultBox.classList.remove('hidden');
   showVerdict(result);
   showEvidence(result);
   showWhy(result);
   showTodo(result);
+  renderAiSlot(); // reset the AI card for this new message
   resultBox.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
 }
 
@@ -168,3 +320,5 @@ document.getElementById('sample-btn').addEventListener('click', () => {
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCheck();
 });
+
+setupAiPanel();
