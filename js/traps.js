@@ -1,333 +1,230 @@
 // =====================================================================
-// traps.js — the three permission traps (Pages 4, 5, 6)
+// traps.js — the permission trap, disguised as "Create your player card"
+// (setup.html, Page 3)
 //
-// THE IDEA: real scams don't look scary. They look like a normal,
-// friendly app asking for something with a good reason. So these three
-// pages look like a "player card" set-up that belongs to this site.
-// After the third one, we reveal the truth about all three.
+// THE IDEA: real scams don't look scary. They look like a normal app
+// asking for something with a friendly reason. So this page is ordinary
+// onboarding: type a name, tick a "human check", then ONE button,
+// "Allow and finish". What that button really does is only written in
+// the small print under it, like real apps do.
+//
+// Behind that one button:
+//   1. camera   -> the phone shows its real camera prompt. If allowed,
+//                  we take ONE still photo with no preview, then switch
+//                  the camera off straight away.
+//   2. location -> the phone shows its real location prompt.
+//   3. alerts   -> pretend only. Tapping the button counts as "allowed"
+//                  (that IS the trick of bundled consent). We never ask
+//                  the browser for real notification permission.
 //
 // Privacy promise (we practise what we preach):
-//   camera   -> live preview on YOUR screen for 3 s, then the camera is
-//               switched off. No photo is taken, nothing is recorded.
-//   location -> shown on a map on YOUR screen only. Never sent or saved.
-//   notify   -> a FAKE permission box made of HTML. We never ask the
-//               browser for real notification permission.
-// Only the choice ("allow" / "block" / "unsupported") is remembered.
+//   The photo, the name and the location go into this browser tab only
+//   (sessionStorage key "ssl_card"). They are never uploaded and never
+//   go into the Firebase result. The score page shows them on the
+//   player card with the reveal, and deletes them at that moment.
+//   Only the choices (allow / block / unsupported) are kept for the
+//   anonymous batch report.
 // =====================================================================
 
 import { initPage, el, icon, sleep, goTo } from './ui.js';
-import { getState, updateState, pageLink } from './session.js';
+import { getState, updateState, saveCardData, readCardData } from './session.js';
 
 initPage();
 
-const primaryBtn = document.getElementById('primary-btn');
-const skipBtn = document.getElementById('skip-btn');
-const statusLine = document.getElementById('status');
+const stages = {
+  details: document.getElementById('stage-details'),
+  check: document.getElementById('stage-check'),
+  finish: document.getElementById('stage-finish'),
+};
 
-// Remember the player's choice for this trap.
+function showStage(name, step) {
+  for (const key of Object.keys(stages)) {
+    stages[key].classList.toggle('hidden', key !== name);
+  }
+  // the 3 small bars at the top
+  for (let i = 1; i <= 3; i++) {
+    const bar = document.getElementById('bar-' + i);
+    bar.className = i < step ? 'done' : (i === step ? 'now' : '');
+  }
+  window.scrollTo({ top: 0 });
+}
+
+// Remember the player's choice for one permission (goes to the report).
 function record(trapName, choice) {
   updateState((s) => {
     s.traps[trapName] = choice;
   });
 }
 
-function lockButtons() {
-  if (primaryBtn) primaryBtn.disabled = true;
-  if (skipBtn) skipBtn.disabled = true;
-}
-
 // "3f6c2a..." -> "Player 3F6C" (from the random anonymous session ID)
-function playerName() {
+function defaultName() {
   const id = String(getState().sessionId || '').replace(/[^a-z0-9]/gi, '');
   return 'Player ' + id.slice(0, 4).toUpperCase();
 }
 
-// What to show for each field on the player card.
-function fieldText(choice, addedText) {
-  if (choice === 'allow') return { text: addedText, set: true };
-  if (choice === 'block' || choice === 'unsupported') return { text: 'Skipped', set: false };
-  return { text: 'Not set', set: false };
-}
+// ---------------------------------------------------------------------
+// Stage 1: details
+// ---------------------------------------------------------------------
+document.getElementById('details-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = document.getElementById('name').value.trim().slice(0, 24);
+  const year = document.getElementById('year').value;
+  saveCardData({ name: name || defaultName(), year: year });
+  showStage('check', 2);
+});
 
-// Draw the player card preview (page 4).
-function renderPlayerCard(photoContent) {
-  const slot = document.getElementById('player-card');
-  if (!slot) return null;
-  const traps = getState().traps;
-  const photo = el('div', { className: 'pc-photo' }, photoContent || icon('user'));
-  const fields = [
-    ['Photo', fieldText(traps.camera, 'Added')],
-    ['City', fieldText(traps.location, 'Pinned')],
-    ['Alerts', fieldText(traps.notify, 'On')],
-  ];
-  slot.replaceChildren(el('div', { className: 'player-card' }, [
-    photo,
+// ---------------------------------------------------------------------
+// Stage 2: the "human check" (just a nice-looking checkbox)
+// ---------------------------------------------------------------------
+const captcha = document.getElementById('captcha');
+captcha.addEventListener('click', async () => {
+  if (captcha.disabled) return;
+  captcha.disabled = true;
+  const box = document.getElementById('captcha-box');
+  box.classList.add('checking');
+  await sleep(1100);
+  box.classList.remove('checking');
+  box.classList.add('checked');
+  box.replaceChildren(icon('check'));
+  captcha.setAttribute('aria-checked', 'true');
+  await sleep(700);
+  drawPreview();
+  showStage('finish', 3);
+});
+
+// ---------------------------------------------------------------------
+// Stage 3: the card preview and ONE Allow button
+// ---------------------------------------------------------------------
+function drawPreview() {
+  const card = readCardData();
+  const initials = String(card.name || '?').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('card-preview').replaceChildren(
+    el('div', { className: 'cp-photo' }, el('span', {}, initials)),
     el('div', {}, [
-      el('div', { className: 'pc-name' }, playerName()),
-      el('div', { className: 'pc-sub' }, 'Batch test · today'),
-    ]),
-    el('div', { className: 'pc-fields' }, fields.map(([k, v]) =>
-      el('div', {}, [el('div', { className: 'k' }, k), el('div', { className: 'v' + (v.set ? ' set' : '') }, v.text)])
-    )),
-  ]));
-  return photo;
+      el('div', { className: 'cp-name' }, card.name || ''),
+      el('div', { className: 'cp-sub' }, (card.year || '') + ' · Batch test'),
+    ])
+  );
 }
 
-// ---------------------------------------------------------------------
-// Page 4: CAMERA ("Add a photo")
-// ---------------------------------------------------------------------
-async function cameraTrap() {
-  lockButtons();
+const statusLine = document.getElementById('status');
+const allowBtn = document.getElementById('allow-btn');
+const skipBtn = document.getElementById('skip-btn');
 
+function setStatus(text) {
+  statusLine.replaceChildren(el('span', { className: 'spinner', ariaHidden: 'true' }), text);
+}
+
+// Take ONE still photo from the front camera, without showing a
+// preview, then switch the camera off. Returns a small JPEG as a
+// data: URL (text), or null.
+async function takeSelfie() {
   const supported = window.isSecureContext && navigator.mediaDevices &&
     typeof navigator.mediaDevices.getUserMedia === 'function';
-  if (!supported) {
-    record('camera', 'unsupported');
-    moveOn('Camera not available here. We\'ll use your initials.', 'trap-location.html');
-    return;
-  }
+  if (!supported) return { choice: 'unsupported', photo: null };
 
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
   } catch (err) {
-    record('camera', 'block'); // said "Block", or no camera
-    moveOn('No problem. We\'ll use your initials.', 'trap-location.html');
-    return;
+    return { choice: 'block', photo: null }; // said Block, or no camera
   }
 
-  // Allowed: live preview inside the round photo frame for 3 seconds.
-  record('camera', 'allow');
-  const video = el('video', { muted: true, autoplay: true, playsInline: true });
+  // A tiny, almost invisible video element: phones only produce camera
+  // frames for a video that is on the page.
+  const video = el('video', { muted: true, autoplay: true, playsInline: true, className: 'silent-video' });
   video.setAttribute('playsinline', '');
+  document.body.appendChild(video);
   video.srcObject = stream;
-  renderPlayerCard(video);
 
-  const live = document.getElementById('camera-live');
-  const liveText = document.getElementById('camera-text');
-  live.classList.remove('hidden');
-  for (let s = 3; s > 0; s--) {
-    liveText.textContent = 'Camera on · hold still ' + s;
-    await sleep(1000);
+  let photo = null;
+  try {
+    await video.play();
+    // wait until the camera gives real frames, then a moment for the
+    // camera to adjust its brightness
+    for (let i = 0; i < 30 && !video.videoWidth; i++) await sleep(100);
+    await sleep(700);
+
+    // draw one frame into a square, mirrored like a selfie
+    const size = 320;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    const side = Math.min(w, h);
+    ctx.translate(size, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+    photo = canvas.toDataURL('image/jpeg', 0.8);
+  } catch (err) {
+    photo = null;
+  } finally {
+    // Switch the camera OFF (the camera light goes off).
+    stream.getTracks().forEach((track) => track.stop());
+    video.srcObject = null;
+    video.remove();
   }
-
-  // Switch the camera OFF (the camera light goes off). No photo taken.
-  stream.getTracks().forEach((track) => track.stop());
-  video.srcObject = null;
-  live.classList.add('hidden');
-
-  renderPlayerCard([icon('user'), el('span', { className: 'done-badge' }, icon('check'))]);
-  moveOn('Photo added', 'trap-location.html');
+  return { choice: 'allow', photo: photo };
 }
 
-// Show a short status line, then go to the next page.
-async function moveOn(message, nextPage) {
-  statusLine.textContent = message;
-  await sleep(1300);
-  goTo(nextPage);
+// Ask for the location. Returns { choice, lat, lng, accuracy }.
+function getLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation || !window.isSecureContext) {
+      resolve({ choice: 'unsupported' });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({
+        choice: 'allow',
+        lat: Number(pos.coords.latitude.toFixed(5)),
+        lng: Number(pos.coords.longitude.toFixed(5)),
+        accuracy: Math.round(pos.coords.accuracy),
+      }),
+      // blocked, or it failed: either way the site did NOT get it
+      () => resolve({ choice: 'block' }),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
 }
 
-// ---------------------------------------------------------------------
-// Page 5: LOCATION ("Pin your city")
-// ---------------------------------------------------------------------
-function locationTrap() {
-  lockButtons();
+allowBtn.addEventListener('click', async () => {
+  allowBtn.disabled = true;
+  skipBtn.disabled = true;
+  document.getElementById('finish-actions').classList.add('hidden');
 
-  if (!navigator.geolocation || !window.isSecureContext) {
-    record('location', 'unsupported');
-    moveOn('Location not available here. Skipping this step.', 'trap-notify.html');
-    return;
-  }
+  // 1. camera
+  setStatus('Setting up your card photo…');
+  const selfie = await takeSelfie();
+  record('camera', selfie.choice);
+  if (selfie.photo) saveCardData({ photo: selfie.photo });
 
-  statusLine.textContent = 'Finding you…';
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      // Allowed. The coordinates only live in this variable.
-      record('location', 'allow');
-      showMap(position.coords.latitude, position.coords.longitude);
-      statusLine.textContent = 'Location added to your player card';
-      document.getElementById('actions').classList.add('hidden');
-      document.getElementById('next').classList.remove('hidden');
-    },
-    () => {
-      // Blocked, or it failed: either way the site did NOT get it.
-      record('location', 'block');
-      moveOn('No problem. You can add it later.', 'trap-notify.html');
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-  );
-}
+  // 2. location
+  setStatus('Placing you on the batch map…');
+  const place = await getLocation();
+  record('location', place.choice);
+  if (place.choice === 'allow') saveCardData({ lat: place.lat, lng: place.lng, accuracy: place.accuracy });
 
-function showMap(lat, lng) {
-  document.getElementById('map-slot').classList.add('hidden');
-  const mapBox = document.getElementById('map');
-  mapBox.classList.remove('hidden');
-  if (typeof window.L === 'undefined') {
-    // Map library could not load (offline). Show text instead.
-    mapBox.replaceChildren(el('p', { style: 'padding:20px' }, 'Position found (the map could not load offline).'));
-    return;
-  }
-  const map = window.L.map('map', { zoomControl: false, attributionControl: true }).setView([lat, lng], 17);
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(map);
-  window.L.circleMarker([lat, lng], { radius: 9, color: '#0b0d14', weight: 3, fillColor: '#ff5a4e', fillOpacity: 1 }).addTo(map);
-}
+  // 3. alerts: the tap on "Allow and finish" IS the consent (pretend only)
+  record('notify', 'allow');
 
-// ---------------------------------------------------------------------
-// Page 6: NOTIFICATIONS (fully simulated), then THE REVEAL
-// ---------------------------------------------------------------------
-const SPAM = [
-  'Your phone has 3 viruses. Clean now',
-  'Claim ₹10,000 cashback. Offer ends in 5 min',
-  'Your bank account is blocked. Verify immediately',
-  'You won an iPhone 16. Tap to claim',
-  'Battery damaged by virus (87%). Repair now',
-  'KYC expired. Update today to avoid suspension',
-];
+  statusLine.replaceChildren(icon('circle-check'), 'Your card is ready. You\'ll see it at the end.');
+  await sleep(1400);
+  goTo('game.html');
+});
 
-function notifyTrap() {
-  lockButtons();
-  const perm = document.getElementById('perm');
-  // The fake prompt shows this site's real address, like the real one.
-  document.getElementById('perm-site').textContent = window.location.host || 'this site';
-  perm.classList.remove('hidden');
-  document.getElementById('perm-allow').focus();
-
-  document.getElementById('perm-allow').addEventListener('click', async () => {
-    perm.classList.add('hidden');
-    record('notify', 'allow');
-    await floodWithSpam();
-    showReveal();
-  }, { once: true });
-
-  document.getElementById('perm-block').addEventListener('click', () => {
-    perm.classList.add('hidden');
-    record('notify', 'block');
-    showReveal();
-  }, { once: true });
-}
-
-function notNowNotify() {
-  lockButtons();
+skipBtn.addEventListener('click', async () => {
+  allowBtn.disabled = true;
+  skipBtn.disabled = true;
+  record('camera', 'block');
+  record('location', 'block');
   record('notify', 'block');
-  showReveal();
-}
-
-async function floodWithSpam() {
-  const stack = document.getElementById('notif-stack');
-  const site = window.location.host || 'this site';
-  for (const text of SPAM) {
-    stack.prepend(el('div', { className: 'fake-notif' }, [
-      el('div', { className: 'n-icon' }, icon('triangle-alert')),
-      el('div', {}, [el('div', { className: 'n-site' }, site + ' · now'), el('div', { className: 'n-text' }, text)]),
-    ]));
-    await sleep(420);
-  }
-  await sleep(1500);
-  stack.replaceChildren();
-}
-
-// One row of the reveal list.
-function permRow(iconName, title, choice, ifAllowed) {
-  let state = { text: 'Blocked', cls: 'is-good' };
-  if (choice === 'allow') state = { text: 'Allowed', cls: 'is-bad' };
-  if (choice === 'unsupported') state = { text: 'Not available', cls: 'is-neutral' };
-  if (choice === null || choice === undefined) state = { text: 'Not asked', cls: 'is-neutral' };
-  return el('li', {}, [
-    icon(iconName),
-    el('div', {}, [el('div', { className: 'what' }, title), el('div', { className: 'why' }, ifAllowed)]),
-    el('span', { className: 'state ' + state.cls }, state.text),
-  ]);
-}
-
-function showReveal() {
-  const traps = getState().traps;
-  let allowed = 0;
-  for (const name of ['camera', 'location', 'notify']) {
-    if (traps[name] === 'allow') allowed += 1;
-  }
-
-  const headline = 'That wasn\'t a player card.';
-  let lead = 'In under a minute this page asked for three permissions, each with a friendly reason. You gave ' +
-    allowed + ' of 3. Scam sites and fake apps work exactly like this.';
-  if (allowed === 0) {
-    lead = 'In under a minute this page asked for three permissions, each with a friendly reason. You gave none. ' +
-      'Most people give at least one, because the reason sounded helpful.';
-  }
-
-  const reveal = document.getElementById('reveal');
-  reveal.replaceChildren(
-    el('div', { className: 'reveal-head rise' }, [
-      el('p', { className: 'meta' }, 'What just happened'),
-      el('h1', {}, headline),
-      el('p', { className: 'lead' }, lead),
-    ]),
-    el('ul', { className: 'perm-list rise' }, [
-      permRow('camera', 'Camera', traps.camera,
-        'The page could watch you live. A scam page can record you or grab your face for fake KYC and blackmail.'),
-      permRow('map-pin', 'Location', traps.location,
-        'Your exact position, accurate to a few metres. Not your city: where you are standing.'),
-      permRow('bell-ring', 'Notifications', traps.notify,
-        'A site you allow can push alerts like those any time, even after you close it. That is how fake virus and prize alerts reach phones.'),
-    ]),
-    el('div', { className: 'stack' }, [
-      el('h2', {}, 'Why it works'),
-      el('ul', { className: 'steps-list' }, [
-        el('li', {}, [el('b', {}, 'Borrowed trust. '), 'This site had been honest with you so far, so the requests felt safe.']),
-        el('li', {}, [el('b', {}, 'A helpful reason. '), 'A photo for your card, a city for the map, an alert for your result.']),
-        el('li', {}, [el('b', {}, 'One tap each. '), 'No password, no warning. The browser asks, and we tap Allow.']),
-      ]),
-    ]),
-    el('div', { className: 'note note-info' }, [
-      icon('lock'),
-      el('div', {}, [
-        el('div', { className: 'note-title' }, 'This was a demo'),
-        el('p', {}, 'No photo was taken, your location never left this phone, and no real notifications were turned on.'),
-      ]),
-    ]),
-    el('div', { className: 'note note-info' }, [
-      icon('rotate-ccw'),
-      el('div', {}, [
-        el('div', { className: 'note-title' }, 'Undo what you allowed'),
-        el('p', {}, 'Your browser still remembers your choices for this site. Tap the icon to the left of the web address, open Permissions or Site settings, and reset them.'),
-      ]),
-    ]),
-    el('a', { className: 'btn btn-primary btn-block', href: pageLink('game.html') },
-      ['Start the game', icon('arrow-right')])
-  );
-
-  document.getElementById('setup').classList.add('hidden');
-  reveal.classList.remove('hidden');
-  window.scrollTo({ top: 0 });
-}
-
-// ---------------------------------------------------------------------
-// Start the right trap for this page
-// ---------------------------------------------------------------------
-const trap = document.body.dataset.trap;
-
-if (trap === 'camera') {
-  renderPlayerCard();
-  primaryBtn.addEventListener('click', cameraTrap);
-  skipBtn.addEventListener('click', () => {
-    lockButtons();
-    record('camera', 'block');
-    moveOn('Skipped. We\'ll use your initials.', 'trap-location.html');
-  });
-}
-
-if (trap === 'location') {
-  primaryBtn.addEventListener('click', locationTrap);
-  skipBtn.addEventListener('click', () => {
-    lockButtons();
-    record('location', 'block');
-    moveOn('Skipped', 'trap-notify.html');
-  });
-}
-
-if (trap === 'notify') {
-  primaryBtn.addEventListener('click', notifyTrap);
-  skipBtn.addEventListener('click', notNowNotify);
-}
+  statusLine.replaceChildren('No problem. Your card will use your initials.');
+  await sleep(1200);
+  goTo('game.html');
+});

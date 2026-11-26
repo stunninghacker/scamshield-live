@@ -3,42 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Your score — ScamShield Live</title>
+  <title>Your player card — ScamShield Live</title>
   <meta name="theme-color" content="#0b0d14">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Leaflet: free map library, used only to draw YOUR location on YOUR screen -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-step="9">
+<body data-step="6">
   <header id="topbar"></header>
 
   <main class="page stack-lg" id="score-page">
+    <!-- The player card (filled in by js/score.js) -->
     <section>
-      <p class="meta" style="margin-bottom:16px">Your score card</p>
-      <div class="score-hero">
-        <div>
-          <div class="score-figure" aria-live="polite"><span id="awareness">0</span><span class="of"> / 100</span></div>
-          <p class="muted" style="margin-top:12px">Awareness score</p>
-        </div>
-        <div class="rank">
-          <span id="rank-icon"></span>
-          <div class="rank-name" id="rank-name"></div>
-          <div class="rank-sub" id="rank-sub"></div>
-        </div>
+      <p class="meta" style="margin-bottom:16px">Your player card</p>
+      <div id="id-card" class="id-card"></div>
+    </section>
+
+    <!-- The reveal: how the card was made -->
+    <section id="reveal" class="stack-lg"></section>
+
+    <!-- The score details -->
+    <section class="stack">
+      <h2>Your score</h2>
+      <div class="card" id="confidence-card"></div>
+      <div class="card">
+        <h3>Your results</h3>
+        <ul class="rows" id="result-list"></ul>
       </div>
-      <div class="awareness-bar"><span id="awareness-fill"></span></div>
+      <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per permission blocked (max 30) + 10 if you escaped the call</p>
     </section>
-
-    <section class="card" id="confidence-card"></section>
-
-    <section class="card">
-      <h3>Your results</h3>
-      <ul class="rows" id="result-list"></ul>
-    </section>
-
-    <p class="formula">Awareness = round(correct ÷ 8 × 60) + 10 per permission blocked (max 30) + 10 if you escaped the call</p>
 
     <div class="stack">
       <a class="btn btn-primary btn-block" href="report.html">See how your batch did <i data-icon="arrow-right"></i></a>
@@ -46,6 +43,10 @@
     </div>
   </main>
 
+  <!-- fake notifications appear here (HTML only, never real ones) -->
+  <div id="notif-stack" class="notif-stack" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="js/score.js"></script>
 </body>
 </html>

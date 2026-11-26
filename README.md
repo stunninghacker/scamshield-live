@@ -15,17 +15,14 @@ Web version of the **ScamShield** Flutter app. No frameworks, no build step, no 
 | Page | File | What it does |
 |---|---|---|
 | 1 Home | `index.html` | Start button, links to checker and report |
-| 2 Footprint Mirror | `mirror.html` + `js/mirror.js` | Shows what any website can read about you without asking |
-| 3 Confidence Check | `confidence.html` | 1–5 stars: "How good are you at spotting scams?" |
-| 4 Player card: photo | `trap-camera.html` | Permission trap 1. Looks like a normal app step. Real camera prompt → 3-second live preview → camera switched off |
-| 5 Player card: city | `trap-location.html` | Permission trap 2. Real location prompt → your exact position on a map (on your screen only) |
-| 6 Player card: alerts | `trap-notify.html` | Permission trap 3. **Fake** HTML permission box + fake spam pop-ups, then the reveal of all three |
-| 7 Spot the Scam | `game.html` + `js/game.js` + `js/rounds.js` | 8 rounds, 15 s timer, red flags highlighted by the engine |
-| 8 Digital Arrest | `story.html` + `js/story.js` | Fake "CBI officer" video-call chat with 3 choices |
-| 9 Score Card | `score.html` + `js/score.js` | Awareness score, badge, share; saves result once (survey mode) |
-| 10 Batch Report | `report.html` + `js/report.js` | Stats for the whole batch, confidence gap, % fooled per round |
-| 11 Checker | `check.html` + `js/check.js` | Paste any message → verdict, risk meter, highlighted red flags |
-| 12 Stay Safe | `safe.html` | Official cybercrime numbers (with sources) + 6 golden rules |
+| 2 Confidence Check | `confidence.html` | 1 to 5: "How good are you at spotting scams?" |
+| 3 Player card set-up | `setup.html` + `js/traps.js` | **The permission trap.** Looks like normal onboarding: name and year → a "human check" → one **Allow and finish** button. Behind it: the real camera prompt (one still photo, no preview, camera off straight away), the real location prompt, and pretend alerts. What the button does is only in the small print |
+| 4 Spot the Scam | `game.html` + `js/game.js` + `js/rounds.js` | 8 rounds, 15 s timer, red flags marked by the engine |
+| 5 Digital Arrest | `story.html` + `js/story.js` | Fake "CBI officer" video-call chat with 3 choices |
+| 6 Player card + reveal | `score.html` + `js/score.js` + `js/footprint.js` | **The payoff.** A player card built from their selfie, name, exact location (map) and everything the browser gives away, then the reveal of how each detail was taken, fake spam alerts, and the score. Saves the anonymous result once (survey mode) |
+| 7 Batch Report | `report.html` + `js/report.js` | Stats for the whole batch, confidence gap, % fooled per round |
+| 8 Checker | `check.html` + `js/check.js` | Paste any message → verdict, risk meter, highlighted red flags |
+| 9 Stay Safe | `safe.html` | Official cybercrime numbers (with sources) + 6 golden rules |
 
 Shared files:
 
@@ -48,7 +45,7 @@ python -m http.server 8080
 Then open http://localhost:8080. (Or `npx serve` if you prefer Node.)
 
 **Test on your phone (same Wi-Fi):** run `python -m http.server 8080 --bind 0.0.0.0`, find your laptop's IP with `ipconfig` (e.g. `192.168.1.5`) and open `http://192.168.1.5:8080` on the phone.
-Camera and location **need HTTPS**, so on plain `http://` over Wi-Fi those two traps show "not available". Everything else works. Test the traps on GitHub Pages (HTTPS).
+Camera and location **need HTTPS**, so on plain `http://` over Wi-Fi the set-up page records them as "not available". Everything else works. Test the traps on GitHub Pages (HTTPS).
 
 **Demo mode:** add `?demo` to any URL (e.g. `index.html?demo`). It sticks for the whole tab, shows a yellow DEMO pill, never saves to Firebase, shows "Skip to story →" after round 3, and lets you tap the timer to pause. Close the tab to leave demo mode.
 
@@ -134,10 +131,11 @@ git commit -m "ScamShield Live"
 
 | Feature | What happens | What never happens |
 |---|---|---|
-| Camera (player card photo) | Live preview on your screen for 3 s, then every camera track is stopped | No photo, no recording, no upload, no canvas |
-| Location (player card city) | Position shown on a map on your phone | Coordinates are never sent to us or saved (map tiles load from OpenStreetMap like any map app) |
-| Notifications (player card alerts) | A **fake** permission box made of HTML | `Notification.requestPermission()` is never called |
-| Footprint Mirror | Browser info shown only to you; one city lookup via `ipapi.co` | Nothing stored or sent to us |
+| Camera (card photo) | The real camera prompt. If allowed: ONE still photo with no preview, then every camera track is stopped. The photo is shown only on that person's own player card | Never uploaded, never saved to Firebase. Kept in that browser tab only (sessionStorage `ssl_card`) and deleted the moment the card is drawn |
+| Location (batch map) | The real location prompt. If allowed: the exact spot is shown on a map on the player card | Coordinates never sent to us or saved; deleted with the photo (map tiles load from OpenStreetMap like any map app) |
+| Alerts (result notification) | Pretend only: tapping "Allow and finish" counts as agreeing (that is the bundled-consent lesson). Fake alerts appear as HTML on the score page | `Notification.requestPermission()` is never called |
+| Name and year | Typed on the set-up page, shown on the player card | Never uploaded or saved; deleted with the photo |
+| Device details | Read by the browser (device, browser, city via `ipapi.co`, battery, screen, languages) and shown on the card | Nothing stored or sent to us |
 | Checker | Runs 100% in the browser | No network request while checking (verify in DevTools → Network) |
 | Survey | Anonymous scores + allow/block choices | No personal data at all |
 
@@ -181,14 +179,12 @@ Open `index.html?demo` on your phone. Use a **mobile hotspot**, not college Wi-F
 | Time | Page | What you say |
 |---|---|---|
 | 0:00 | Home | 🎤 "Let's see how safe we really are online." |
-| 0:15 | Mirror | 🎤 "Before I say anything, look what my browser already revealed. I didn't ask permission for any of this. Every website can see it." |
-| 0:30 | Confidence | 🎤 "Remember your answer, because we'll check it at the end." |
-| 0:40 | Player card: photo (tap **Take photo → Allow**) | 🎤 "It's asking for a photo for my score card. Sounds reasonable, right? One tap." |
-| 1:00 | City + alerts → the reveal | 🎤 "My city, then alerts for my result. Every request had a friendly reason." *(spam floods in, reveal appears)* "That wasn't a player card. In under a minute I gave a website my camera, my exact location, and the right to message me forever. No hacking. Just trust." |
-| 1:30 | Game: 3 rounds, then **Skip to story** | 🎤 "Would you spot this one? Most of our batch didn't." |
-| 2:30 | Story | 🎤 "People have lost their life savings to this exact script." |
-| 3:00 | Score | (quick look at the badge) |
-| 3:15 | Report | 🎤 "I tested N students from our own batch. X% felt confident. Only Y% were actually safe. Look at this gap." |
+| 0:15 | Confidence | 🎤 "Remember your answer, because we'll check it at the end." |
+| 0:25 | Player card set-up (name → human check → **Allow and finish** → tap Allow on both phone prompts) | 🎤 "Like every app, it wants a player card. A name, a quick robot check, one button. Easy." *(say nothing about what you just allowed)* |
+| 1:00 | Game: 3 rounds, then **Skip to the story** | 🎤 "Would you spot this one? Most of our batch didn't." |
+| 2:00 | Story | 🎤 "People have lost their life savings to this exact script." |
+| 2:40 | Player card + reveal | 🎤 *(show the card: your photo, your name, a map of where you are standing)* "I never saw a camera preview. I never typed my address. One friendly button gave a website my face, my exact location, and the right to spam me." *(alerts flood in)* "No hacking. Just trust." |
+| 3:20 | Report | 🎤 "I tested N students from our own batch. X% felt confident. Only Y% were actually safe. Look at this gap." |
 | 4:00 | Checker (**Try a sample** → sample 1) | 🎤 "So I built a tool. Paste any message and it tells you why it's dangerous, entirely on your phone." |
 | 4:40 | Stay Safe → close | 🎤 "Everything you saw is built with only HTML, CSS and JavaScript, the same things we learned in class. Thank you." |
 
@@ -197,7 +193,7 @@ Open `index.html?demo` on your phone. Use a **mobile hotspot**, not college Wi-F
 ### Likely judge questions
 
 - **Is the camera trick hacking?** No. It's the browser's own permission system. The danger is our careless tap.
-- **Do you store photos or location?** Never. Only anonymous scores and allow/block choices.
+- **Do you store photos or location?** Never. The photo and location only exist in the player's own browser tab until their card is shown, then they are deleted. Only anonymous scores and allow/block choices reach the batch report.
 - **Is it AI?** No. It's a rule engine, so every verdict can be explained. Security tools must be explainable.
 - **How does the report update?** Each result is saved anonymously to Firebase Firestore, and the report page reads and calculates live in JavaScript.
 - **Will it catch every scam?** No tool does. It catches common patterns, and when unsure it says SUSPICIOUS, never SAFE.
@@ -229,6 +225,12 @@ The interface was redesigned with the method from **unslop** by Damir Sokolovsky
 - **Icons:** line icons from [Lucide](https://lucide.dev) (ISC licence), all in `assets/icons.svg`. No emoji in the interface; emoji only appear inside the fake scam messages, because real scams use them
 - **Signature:** the hand-drawn red marker underline on flagged words (game and checker). Red = the attack itself (asks for a secret, money, remote access, a police threat, a risky link), amber = a pressure trick (panic, prize, easy job), dotted = a supporting hint (brand name, phone number)
 
-### Why the permission traps look trustworthy
+### Why the permission trap looks trustworthy
 
-Real scams don't look scary. They look like a friendly app asking for something with a good reason. So pages 4 to 6 are a "player card" set-up that belongs to this site: a photo for your score card, your city for the batch map, an alert when the report is ready. Each has a "Skip" option, like real apps. Nothing reveals itself until the end of page 6, where one screen shows what each permission gave away, why it worked (borrowed trust, a helpful reason, one tap each) and how to reset the permissions in the browser. The camera still switches off after 3 seconds, the location never leaves the phone and the notification prompt is fake HTML.
+Real scams don't look scary. They look like a friendly app asking for something with a good reason. So the trap is one ordinary onboarding page with an innocent address (`setup.html`): type a name, tick a "human check", then **one** button, "Allow and finish". What it really does is only written in the small print under it, the way real apps do. Nothing reveals itself early, so people don't get careful halfway through.
+
+The pay-off comes after the game and the call: a player card with their own photo, name, a map of exactly where they were standing, and everything their browser gave away. Right under it, the reveal explains how each detail was taken, fake spam alerts fire, and it tells them how to reset the permissions.
+
+Two things a website cannot do, and this one doesn't pretend to: it cannot merge the camera and location requests into one browser prompt (the phone always shows its own dialogs), and it never asks for real notification permission.
+
+Privacy guardrails (unchanged in spirit from the original rules): the camera switches off right after one still photo, there is no recording, and the photo, name and location stay in the player's own browser tab only. The score page deletes them as soon as the card is drawn, and the anonymous result sent to Firebase has fixed fields that cannot include them (the Firestore rules reject any extra field).

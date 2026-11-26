@@ -12,7 +12,7 @@
 
 import { getState, isDemo, pageLink, resetState } from './session.js';
 
-export const TOTAL_STEPS = 12;
+export const TOTAL_STEPS = 9;
 const ICON_FILE = 'assets/icons.svg';
 
 // true if the phone asks for less animation.
@@ -292,5 +292,5 @@ export function phoneStatusBar() {
 // Used by the Home page "Start" button: fresh run, same mode.
 export function startFresh() {
   resetState();
-  goTo('mirror.html');
+  goTo('confidence.html');
 }

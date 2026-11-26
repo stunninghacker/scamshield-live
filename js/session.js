@@ -89,7 +89,42 @@ export function resetState() {
   const mode = old ? old.mode : (urlWantsDemo() ? 'demo' : 'survey');
   const state = newState(mode);
   writeState(state);
+  clearCardData();
   return state;
+}
+
+// ---------------------------------------------------------------------
+// Player card data: the name, selfie and location from the set-up page.
+// Kept under a SEPARATE key ("ssl_card") so it can never end up in the
+// anonymous result that goes to Firebase. It stays in this browser tab
+// only, and the score page deletes it the moment the card is drawn.
+// ---------------------------------------------------------------------
+const CARD_KEY = 'ssl_card';
+
+export function readCardData() {
+  try {
+    return JSON.parse(window.sessionStorage.getItem(CARD_KEY) || '{}');
+  } catch (err) {
+    return {};
+  }
+}
+
+// saveCardData({ name: 'Riya' }) adds to what is already there.
+export function saveCardData(changes) {
+  const data = Object.assign(readCardData(), changes);
+  try {
+    window.sessionStorage.setItem(CARD_KEY, JSON.stringify(data));
+  } catch (err) {
+    // storage full or blocked: the card will just show less
+  }
+}
+
+export function clearCardData() {
+  try {
+    window.sessionStorage.removeItem(CARD_KEY);
+  } catch (err) {
+    // nothing to do
+  }
 }
 
 export function isDemo() {

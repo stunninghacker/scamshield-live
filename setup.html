@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create your player card — ScamShield Live</title>
+  <meta name="theme-color" content="#0b0d14">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<!-- The permission trap, made to feel like normal app onboarding.
+     Details -> a "human check" -> ONE Allow button, with what it really
+     does written only in the small print. The reveal is on score.html,
+     after the game. Privacy (see js/traps.js): one still photo and the
+     location are kept in this browser tab only, never uploaded, and
+     deleted as soon as the player card is drawn. Notifications are
+     never really requested: that part is pretend. -->
+<body data-step="3">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <div class="setup-steps" aria-hidden="true"><span id="bar-1" class="now"></span><span id="bar-2"></span><span id="bar-3"></span></div>
+
+    <!-- Stage 1: details -->
+    <section id="stage-details">
+      <div class="page-head">
+        <p class="meta">Player card · 1 of 3</p>
+        <h1>Create your player card</h1>
+        <p class="lead">It holds your result at the end of the test.</p>
+      </div>
+      <form id="details-form" class="stack" autocomplete="off" novalidate>
+        <div class="field">
+          <label for="name">Display name</label>
+          <input id="name" name="name" type="text" maxlength="24" placeholder="Your name or a nickname" autocomplete="nickname" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="year">Year</label>
+          <select id="year" name="year">
+            <option value="1st year">1st year</option>
+            <option value="2nd year">2nd year</option>
+            <option value="3rd year">3rd year</option>
+            <option value="4th year">4th year</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Continue <i data-icon="arrow-right"></i></button>
+      </form>
+    </section>
+
+    <!-- Stage 2: a "human check" -->
+    <section id="stage-check" class="hidden">
+      <div class="page-head">
+        <p class="meta">Player card · 2 of 3</p>
+        <h1>Quick check</h1>
+        <p class="lead">This keeps bots out of the batch results.</p>
+      </div>
+      <button id="captcha" class="captcha" type="button" role="checkbox" aria-checked="false">
+        <span class="captcha-box" id="captcha-box"></span>
+        <span class="captcha-label">I'm not a robot</span>
+        <span class="captcha-brand"><i data-icon="shield-check"></i><span>Human check</span></span>
+      </button>
+    </section>
+
+    <!-- Stage 3: one Allow -->
+    <section id="stage-finish" class="hidden">
+      <div class="page-head">
+        <p class="meta">Player card · 3 of 3</p>
+        <h1>Finish your card</h1>
+        <p class="lead">One tap and your card is ready for the end of the test.</p>
+      </div>
+
+      <div class="card-preview" id="card-preview"></div>
+
+      <p id="status" class="setup-status" aria-live="polite"></p>
+
+      <div id="finish-actions" class="stack next-row">
+        <button id="allow-btn" class="btn btn-primary btn-block" type="button">Allow and finish</button>
+        <p class="fine-print">By continuing you allow ScamShield Live to use your camera for your card photo, your location to place you on the batch map, and to send you a notification when results are ready.</p>
+        <button id="skip-btn" class="btn btn-quiet btn-block" type="button">Skip for now</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/traps.js"></script>
+</body>
+</html>

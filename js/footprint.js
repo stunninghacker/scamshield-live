@@ -1,17 +1,11 @@
 // =====================================================================
-// mirror.js — Footprint Mirror (Page 2)
-// Reads details that ANY website can see without asking, and shows
-// them back to the visitor. Nothing here is saved or sent anywhere
-// (except one city lookup, whose answer is only shown on screen).
+// footprint.js — reads details that ANY website can see without asking.
+// Used by the player card on the score page. Nothing here is saved or
+// sent anywhere, except one city lookup (ipapi.co) whose answer is only
+// shown on screen.
 // =====================================================================
 
-import { initPage, el, icon, typeText, sleep, reducedMotion } from './ui.js';
-
-initPage();
-
-// ---------- Reading browser info ----------
-
-// Operating system / device, e.g. "Android 14 · Mobile"
+// Operating system / device, e.g. "Android 14 · Pixel 8 · Phone"
 async function getDevice() {
   const uaData = navigator.userAgentData;
   if (uaData) {
@@ -107,7 +101,7 @@ async function getCity() {
     if (!res.ok) return fallback;
     const data = await res.json();
     if (!data.city) return fallback;
-    return [data.city, data.region, data.country_name].filter(Boolean).join(', ') + ' (approx.)';
+    return [data.city, data.region, data.country_name].filter(Boolean).join(', ');
   } catch (err) {
     return fallback;
   } finally {
@@ -122,10 +116,6 @@ function getLanguage() {
   return langs || 'Unknown';
 }
 
-function getDarkMode() {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark mode on' : 'Dark mode off';
-}
-
 function getHardware() {
   const parts = [];
   if (navigator.hardwareConcurrency) parts.push(navigator.hardwareConcurrency + ' CPU cores');
@@ -133,47 +123,19 @@ function getHardware() {
   return parts.length ? parts.join(' · ') : 'Hidden by this browser';
 }
 
-// ---------- Showing the rows one by one ----------
-
-function addRow(iconName, label) {
-  const valueEl = el('div', { className: 'value' });
-  const row = el('li', {}, [
-    icon(iconName),
-    el('div', {}, [el('div', { className: 'label' }, label), valueEl]),
-  ]);
-  document.getElementById('ledger').appendChild(row);
-  return valueEl;
-}
-
-async function run() {
-  // Start the slow lookups now, so they are ready when their card shows.
-  const devicePromise = getDevice();
-  const batteryPromise = getBattery();
-  const cityPromise = getCity();
-
+// Collect everything. Returns a list of { icon, label, value }.
+// Battery is left out on phones that don't share it (like iPhones).
+export async function collectFootprint() {
+  const [device, battery, city] = await Promise.all([getDevice(), getBattery(), getCity()]);
   const items = [
-    { icon: 'smartphone', label: 'Device', value: devicePromise },
+    { icon: 'smartphone', label: 'Device', value: device },
     { icon: 'globe', label: 'Browser', value: getBrowser() },
+    { icon: 'map-pin', label: 'City (from your internet connection)', value: city },
+    { icon: 'clock', label: 'Local time', value: getLocalTime() },
     { icon: 'monitor', label: 'Screen', value: getScreen() },
-    { icon: 'battery-charging', label: 'Battery', value: batteryPromise, optional: true },
-    { icon: 'clock', label: 'Local time and timezone', value: getLocalTime() },
-    { icon: 'map-pin', label: 'Approximate city', value: cityPromise },
+    { icon: 'battery-charging', label: 'Battery', value: battery },
     { icon: 'languages', label: 'Languages', value: getLanguage() },
-    { icon: 'sun-moon', label: 'Display theme', value: getDarkMode() },
     { icon: 'cpu', label: 'Processor and memory', value: getHardware() },
   ];
-
-  const gap = reducedMotion() ? 0 : 400;
-  for (const item of items) {
-    const value = await item.value; // wait if it is a promise
-    if (item.optional && !value) continue; // e.g. no battery info on iPhone
-    const valueEl = addRow(item.icon, item.label);
-    typeText(valueEl, String(value), 22);
-    await sleep(gap);
-  }
-
-  await sleep(gap);
-  document.getElementById('mirror-end').classList.remove('hidden');
+  return items.filter((item) => item.value);
 }
-
-run();
